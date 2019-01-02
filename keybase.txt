@@ -1,0 +1,54 @@
+==================================================================
+https://keybase.io/xavk
+--------------------------------------------------------------------
+
+I hereby claim:
+
+  * I am an admin of http://xavkearney.com
+  * I am xavk (https://keybase.io/xavk) on keybase.
+  * I have a public key ASDozAkLutZU5FlAOUM3_6PQp0iCMuebwnORc7nwdws1ngo
+
+To do so, I am signing this object:
+
+{
+    "body": {
+        "key": {
+            "eldest_kid": "0120e22de49eb3956ef3a211d76ed868972105f28f662d39b193577dd02032f286810a",
+            "host": "keybase.io",
+            "kid": "0120e8cc090bbad654e45940394337ffa3d0a7488232e79bc2739173b9f0770b359e0a",
+            "uid": "8dec5db1dc9ee6131b4a2c438e834d19",
+            "username": "xavk"
+        },
+        "service": {
+            "hostname": "xavkearney.com",
+            "protocol": "http:"
+        },
+        "type": "web_service_binding",
+        "version": 1
+    },
+    "client": {
+        "name": "keybase.io go client",
+        "version": "1.0.22"
+    },
+    "ctime": 1494683150,
+    "expire_in": 504576000,
+    "merkle_root": {
+        "ctime": 1494683131,
+        "hash": "809aa83728dd4a84b4c30065b35b9b77c1bbd1e18d57cd212371d4068285b8d3558e2a13ab0ca61d3e6562b559dc57a2464acb7292dbaa7cd8919374e4e33646",
+        "seqno": 1078112
+    },
+    "prev": "c120dbb20f568d166314184f9d6849bef265555de93ab2a0fb9d6978208df01c",
+    "seqno": 13,
+    "tag": "signature"
+}
+
+which yields the signature:
+
+hKRib2R5hqhkZXRhY2hlZMOpaGFzaF90eXBlCqNrZXnEIwEg6MwJC7rWVORZQDlDN/+j0KdIgjLnm8JzkXO58HcLNZ4Kp3BheWxvYWTFAvN7ImJvZHkiOnsia2V5Ijp7ImVsZGVzdF9raWQiOiIwMTIwZTIyZGU0OWViMzk1NmVmM2EyMTFkNzZlZDg2ODk3MjEwNWYyOGY2NjJkMzliMTkzNTc3ZGQwMjAzMmYyODY4MTBhIiwiaG9zdCI6ImtleWJhc2UuaW8iLCJraWQiOiIwMTIwZThjYzA5MGJiYWQ2NTRlNDU5NDAzOTQzMzdmZmEzZDBhNzQ4ODIzMmU3OWJjMjczOTE3M2I5ZjA3NzBiMzU5ZTBhIiwidWlkIjoiOGRlYzVkYjFkYzllZTYxMzFiNGEyYzQzOGU4MzRkMTkiLCJ1c2VybmFtZSI6InhhdmsifSwic2VydmljZSI6eyJob3N0bmFtZSI6InhhdmtlYXJuZXkuY29tIiwicHJvdG9jb2wiOiJodHRwOiJ9LCJ0eXBlIjoid2ViX3NlcnZpY2VfYmluZGluZyIsInZlcnNpb24iOjF9LCJjbGllbnQiOnsibmFtZSI6ImtleWJhc2UuaW8gZ28gY2xpZW50IiwidmVyc2lvbiI6IjEuMC4yMiJ9LCJjdGltZSI6MTQ5NDY4MzE1MCwiZXhwaXJlX2luIjo1MDQ1NzYwMDAsIm1lcmtsZV9yb290Ijp7ImN0aW1lIjoxNDk0NjgzMTMxLCJoYXNoIjoiODA5YWE4MzcyOGRkNGE4NGI0YzMwMDY1YjM1YjliNzdjMWJiZDFlMThkNTdjZDIxMjM3MWQ0MDY4Mjg1YjhkMzU1OGUyYTEzYWIwY2E2MWQzZTY1NjJiNTU5ZGM1N2EyNDY0YWNiNzI5MmRiYWE3Y2Q4OTE5Mzc0ZTRlMzM2NDYiLCJzZXFubyI6MTA3ODExMn0sInByZXYiOiJjMTIwZGJiMjBmNTY4ZDE2NjMxNDE4NGY5ZDY4NDliZWYyNjU1NTVkZTkzYWIyYTBmYjlkNjk3ODIwOGRmMDFjIiwic2Vxbm8iOjEzLCJ0YWciOiJzaWduYXR1cmUifaNzaWfEQAo8kLq/e1jk3+84Jkk4ckjExLIhJfOSDDQsUAA/XwI/AJSRynKPvTs/P6vvE+eRx79ZbOAS1UNf61MtZQpXKQWoc2lnX3R5cGUgpGhhc2iCpHR5cGUIpXZhbHVlxCD413BwGzy+pLK1JL6rzolaW/9zl8TygTnLsenxssiuSKN0YWfNAgKndmVyc2lvbgE=
+
+And finally, I am proving ownership of this host by posting or
+appending to this document.
+
+View my publicly-auditable identity here: https://keybase.io/xavk
+
+==================================================================
