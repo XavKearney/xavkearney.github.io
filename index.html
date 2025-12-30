@@ -176,10 +176,23 @@
 		[data-theme="dark"] .toggle-switch::after {
 			transform: translateX(24px);
 		}
+
+		#blob-canvas {
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			z-index: -1;
+			pointer-events: none;
+			opacity: 0.7;
+		}
 	</style>
 </head>
 
 <body>
+
+	<canvas id="blob-canvas"></canvas>
 
 	<div class="theme-toggle">
 		<span class="sun">&#9728;</span>
@@ -221,7 +234,7 @@
 	</main>
 
 	<script>
-		(function() {
+		(function () {
 			const toggle = document.querySelector('.toggle-switch');
 			const sunIcon = document.querySelector('.sun');
 			const moonIcon = document.querySelector('.moon');
@@ -254,13 +267,14 @@
 				document.documentElement.setAttribute('data-theme', theme);
 				updateIcons(theme);
 				updateThemeColor(theme);
+				if (window.updateBlobColors) window.updateBlobColors(theme);
 			}
 
 			// Apply initial theme
 			applyTheme(getEffectiveTheme());
 
 			// Toggle handler
-			toggle.addEventListener('click', function() {
+			toggle.addEventListener('click', function () {
 				const current = document.documentElement.getAttribute('data-theme') || getSystemTheme();
 				const next = current === 'dark' ? 'light' : 'dark';
 				localStorage.setItem('theme', next);
@@ -268,11 +282,266 @@
 			});
 
 			// Listen for system theme changes
-			window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+			window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (e) {
 				if (!localStorage.getItem('theme')) {
 					applyTheme(e.matches ? 'dark' : 'light');
 				}
 			});
+		})();
+	</script>
+
+	<script>
+		(function () {
+			const canvas = document.getElementById('blob-canvas');
+			const ctx = canvas.getContext('2d');
+
+			const config = {
+				count: 3,
+				baseRadius: 0.4,
+				colors: {
+					light: [
+						'rgba(180, 140, 255, 0.7)',
+						'rgba(140, 200, 255, 0.7)',
+						'rgba(255, 170, 180, 0.6)'
+					],
+					dark: [
+						'rgba(120, 90, 180, 0.3)',
+						'rgba(90, 120, 170, 0.3)',
+						'rgba(170, 90, 120, 0.25)'
+					]
+				}
+			};
+
+			const blobs = [];
+			let animationId;
+			let mouse = { x: 0.5, y: 0.5, active: false };
+			let orientation = { beta: 0, gamma: 0, active: false };
+
+			function getTheme() {
+				return document.documentElement.getAttribute('data-theme') ||
+					(window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+			}
+
+			function initBlobs() {
+				const theme = getTheme();
+				const positions = [
+					{ x: 0.1, y: 0.2 },
+					{ x: 0.85, y: 0.4 },
+					{ x: 0.15, y: 0.8 }
+				];
+
+				for (let i = 0; i < config.count; i++) {
+					blobs.push({
+						x: positions[i].x,
+						y: positions[i].y,
+						baseX: positions[i].x,
+						baseY: positions[i].y,
+						phase: (i * Math.PI * 2) / config.count,
+						radius: config.baseRadius + (Math.random() * 0.1 - 0.05),
+						color: config.colors[theme][i],
+						targetColor: config.colors[theme][i]
+					});
+				}
+			}
+
+			function resizeCanvas() {
+				const dpr = Math.min(window.devicePixelRatio || 1, 2);
+				canvas.width = window.innerWidth * dpr;
+				canvas.height = window.innerHeight * dpr;
+				ctx.scale(dpr, dpr);
+			}
+
+			function parseRGBA(str) {
+				const match = str.match(/rgba?\((\d+),\s*(\d+),\s*(\d+),?\s*([\d.]+)?\)/);
+				if (!match) return { r: 0, g: 0, b: 0, a: 0 };
+				return {
+					r: parseInt(match[1]),
+					g: parseInt(match[2]),
+					b: parseInt(match[3]),
+					a: parseFloat(match[4] || 1)
+				};
+			}
+
+			function lerpColor(current, target, t) {
+				const c = parseRGBA(current);
+				const tgt = parseRGBA(target);
+				return `rgba(${Math.round(c.r + (tgt.r - c.r) * t)
+					}, ${Math.round(c.g + (tgt.g - c.g) * t)
+					}, ${Math.round(c.b + (tgt.b - c.b) * t)
+					}, ${(c.a + (tgt.a - c.a) * t).toFixed(3)
+					})`;
+			}
+
+			function makeTransparent(color) {
+				const hslaMatch = color.match(/hsla?\(([^,]+),\s*([^,]+),\s*([^,]+),?\s*([\d.]+)?\)/);
+				if (hslaMatch) {
+					return `hsla(${hslaMatch[1]}, ${hslaMatch[2]}, ${hslaMatch[3]}, 0)`;
+				}
+				const rgbaMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+),?\s*([\d.]+)?\)/);
+				if (rgbaMatch) {
+					return `rgba(${rgbaMatch[1]}, ${rgbaMatch[2]}, ${rgbaMatch[3]}, 0)`;
+				}
+				return 'transparent';
+			}
+
+			function drawBlob(blob) {
+				const x = blob.x * window.innerWidth;
+				const y = blob.y * window.innerHeight;
+				const radius = blob.radius * Math.min(window.innerWidth, window.innerHeight);
+
+				const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
+				gradient.addColorStop(0, blob.color);
+				gradient.addColorStop(1, makeTransparent(blob.color));
+
+				ctx.fillStyle = gradient;
+				ctx.beginPath();
+				ctx.arc(x, y, radius, 0, Math.PI * 2);
+				ctx.fill();
+			}
+
+			function updateBlob(blob, time) {
+				const driftRadius = 0.06;
+				const speed = 0.0002;
+
+				let targetX = blob.baseX + Math.sin(time * speed + blob.phase) * driftRadius;
+				let targetY = blob.baseY + Math.cos(time * speed * 0.7 + blob.phase) * driftRadius;
+
+				if (mouse.active) {
+					const influence = 0.012;
+					targetX += (mouse.x - blob.x) * influence;
+					targetY += (mouse.y - blob.y) * influence;
+				}
+
+				if (orientation.active) {
+					const influence = 0.0006;
+					targetX += (orientation.gamma / 90) * influence * 10;
+					targetY += (orientation.beta / 180) * influence * 10;
+				}
+
+				blob.x += (targetX - blob.x) * 0.02;
+				blob.y += (targetY - blob.y) * 0.02;
+
+				// Keep original blobs towards edges, custom blobs can go anywhere
+				if (!blob.isCustom) {
+					if (blob.baseX < 0.5) {
+						blob.x = Math.max(-0.1, Math.min(0.35, blob.x));
+					} else {
+						blob.x = Math.max(0.65, Math.min(1.1, blob.x));
+					}
+				} else {
+					blob.x = Math.max(-0.1, Math.min(1.1, blob.x));
+				}
+				blob.y = Math.max(-0.1, Math.min(1.1, blob.y));
+
+				if (blob.targetColor !== blob.color) {
+					blob.color = lerpColor(blob.color, blob.targetColor, 0.02);
+				}
+			}
+
+			function animate(time) {
+				ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+				blobs.forEach(blob => {
+					updateBlob(blob, time);
+					drawBlob(blob);
+				});
+
+				animationId = requestAnimationFrame(animate);
+			}
+
+			function initMouse() {
+				document.addEventListener('mousemove', (e) => {
+					mouse.x = e.clientX / window.innerWidth;
+					mouse.y = e.clientY / window.innerHeight;
+					mouse.active = true;
+				});
+
+				document.addEventListener('mouseleave', () => {
+					mouse.active = false;
+				});
+			}
+
+			function initAccelerometer() {
+				if (typeof DeviceOrientationEvent === 'undefined') return;
+
+				if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+					return;
+				}
+
+				window.addEventListener('deviceorientation', (e) => {
+					if (e.beta !== null && e.gamma !== null) {
+						orientation.beta = e.beta;
+						orientation.gamma = e.gamma;
+						orientation.active = true;
+					}
+				});
+			}
+
+			window.updateBlobColors = function (theme) {
+				blobs.forEach((blob, i) => {
+					const colors = config.colors[theme];
+					blob.targetColor = blob.isCustom ? generateRandomColor(theme) : colors[i % colors.length];
+				});
+			};
+
+			function generateRandomColor(theme) {
+				// Pick from pleasing hue ranges
+				const hueRanges = [280, 260, 210, 190, 170, 105];
+				const baseHue = hueRanges[Math.floor(Math.random() * hueRanges.length)];
+				const hue = baseHue + (Math.random() * 30 - 15);
+
+				if (theme === 'light') {
+					const sat = 70 + Math.random() * 25;
+					const light = 75 + Math.random() * 15;
+					return `hsla(${hue}, ${sat}%, ${light}%, ${0.65 + Math.random() * 0.15})`;
+				} else {
+					const sat = 35 + Math.random() * 25;
+					const light = 30 + Math.random() * 20;
+					return `hsla(${hue}, ${sat}%, ${light}%, ${0.25 + Math.random() * 0.1})`;
+				}
+			}
+
+			function addBlobAtPosition(x, y) {
+				const theme = getTheme();
+				const color = generateRandomColor(theme);
+				blobs.push({
+					x: x,
+					y: y,
+					baseX: x,
+					baseY: y,
+					phase: Math.random() * Math.PI * 2,
+					radius: config.baseRadius * (0.7 + Math.random() * 0.3),
+					color: color,
+					targetColor: color,
+					isCustom: true
+				});
+			}
+
+			document.addEventListener('click', (e) => {
+				if (e.target.tagName === 'A' || e.target.tagName === 'BUTTON' ||
+					e.target.closest('.theme-toggle')) {
+					return;
+				}
+				const x = e.clientX / window.innerWidth;
+				const y = e.clientY / window.innerHeight;
+				addBlobAtPosition(x, y);
+			});
+
+			document.addEventListener('visibilitychange', () => {
+				if (document.hidden) {
+					cancelAnimationFrame(animationId);
+				} else {
+					animationId = requestAnimationFrame(animate);
+				}
+			});
+
+			window.addEventListener('resize', resizeCanvas);
+
+			resizeCanvas();
+			initBlobs();
+			initMouse();
+			initAccelerometer();
+			animationId = requestAnimationFrame(animate);
 		})();
 	</script>
 </body>
