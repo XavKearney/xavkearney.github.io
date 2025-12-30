@@ -314,8 +314,6 @@
 
 			const blobs = [];
 			let animationId;
-			let mouse = { x: 0.5, y: 0.5, active: false };
-			let orientation = { beta: 0, gamma: 0, active: false };
 
 			function getTheme() {
 				return document.documentElement.getAttribute('data-theme') ||
@@ -403,20 +401,8 @@
 				const driftRadius = 0.06;
 				const speed = 0.0002;
 
-				let targetX = blob.baseX + Math.sin(time * speed + blob.phase) * driftRadius;
-				let targetY = blob.baseY + Math.cos(time * speed * 0.7 + blob.phase) * driftRadius;
-
-				if (mouse.active) {
-					const influence = 0.012;
-					targetX += (mouse.x - blob.x) * influence;
-					targetY += (mouse.y - blob.y) * influence;
-				}
-
-				if (orientation.active) {
-					const influence = 0.0006;
-					targetX += (orientation.gamma / 90) * influence * 10;
-					targetY += (orientation.beta / 180) * influence * 10;
-				}
+				const targetX = blob.baseX + Math.sin(time * speed + blob.phase) * driftRadius;
+				const targetY = blob.baseY + Math.cos(time * speed * 0.7 + blob.phase) * driftRadius;
 
 				blob.x += (targetX - blob.x) * 0.02;
 				blob.y += (targetY - blob.y) * 0.02;
@@ -449,35 +435,7 @@
 				animationId = requestAnimationFrame(animate);
 			}
 
-			function initMouse() {
-				document.addEventListener('mousemove', (e) => {
-					mouse.x = e.clientX / window.innerWidth;
-					mouse.y = e.clientY / window.innerHeight;
-					mouse.active = true;
-				});
-
-				document.addEventListener('mouseleave', () => {
-					mouse.active = false;
-				});
-			}
-
-			function initAccelerometer() {
-				if (typeof DeviceOrientationEvent === 'undefined') return;
-
-				if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-					return;
-				}
-
-				window.addEventListener('deviceorientation', (e) => {
-					if (e.beta !== null && e.gamma !== null) {
-						orientation.beta = e.beta;
-						orientation.gamma = e.gamma;
-						orientation.active = true;
-					}
-				});
-			}
-
-			window.updateBlobColors = function (theme) {
+		window.updateBlobColors = function (theme) {
 				blobs.forEach((blob, i) => {
 					const colors = config.colors[theme];
 					blob.targetColor = blob.isCustom ? generateRandomColor(theme) : colors[i % colors.length];
@@ -539,8 +497,6 @@
 
 			resizeCanvas();
 			initBlobs();
-			initMouse();
-			initAccelerometer();
 			animationId = requestAnimationFrame(animate);
 		})();
 	</script>
