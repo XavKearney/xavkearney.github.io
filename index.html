@@ -15,6 +15,14 @@
 	<meta name="author" content="Xav Kearney">
 	<meta name="keywords"
 		content="xav,kearney,xavier,xjfk,xjk,xav kearney, xavier kearney,imperial,eee,london,uk,engineer,ai,ml,otta">
+	<meta name="description" content="Xav Kearney - Engineer and entrepreneur. Co-founder of Otta.com, now building something new in fintech.">
+	<meta property="og:title" content="Xav Kearney">
+	<meta property="og:description" content="Engineer and entrepreneur. Co-founder of Otta.com, now building something new in fintech.">
+	<meta property="og:type" content="website">
+	<meta property="og:url" content="https://xavkearney.com">
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="Xav Kearney">
+	<meta name="twitter:description" content="Engineer and entrepreneur. Co-founder of Otta.com, now building something new in fintech.">
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 	<link rel="preload" href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300&display=swap"
@@ -103,11 +111,14 @@
 			color: var(--text);
 			text-decoration-color: var(--link-underline);
 			text-underline-offset: 0.15em;
-			transition: text-decoration-color 0.2s ease;
+			transition: text-decoration-color 0.2s ease, transform 0.2s ease, text-shadow 0.2s ease;
+			display: inline-block;
 		}
 
 		a:hover {
 			text-decoration-color: var(--link-underline-hover);
+			transform: translateY(-1px);
+			text-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 		}
 
 		small {
@@ -387,7 +398,9 @@
 				const x = blob.x * window.innerWidth;
 				const y = blob.y * window.innerHeight;
 				const radius = blob.radius * Math.min(window.innerWidth, window.innerHeight);
+				const opacity = blob.opacity !== undefined ? blob.opacity : 1;
 
+				ctx.globalAlpha = opacity;
 				const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
 				gradient.addColorStop(0, blob.color);
 				gradient.addColorStop(1, makeTransparent(blob.color));
@@ -396,6 +409,7 @@
 				ctx.beginPath();
 				ctx.arc(x, y, radius, 0, Math.PI * 2);
 				ctx.fill();
+				ctx.globalAlpha = 1;
 			}
 
 			function updateBlob(blob, time) {
@@ -417,6 +431,14 @@
 					}
 				} else {
 					blob.x = Math.max(-0.1, Math.min(1.1, blob.x));
+
+					// Fade out custom blobs after 30 seconds
+					const age = time - blob.createdAt;
+					const fadeStart = 30000;
+					const fadeDuration = 5000;
+					if (age > fadeStart) {
+						blob.opacity = Math.max(0, 1 - (age - fadeStart) / fadeDuration);
+					}
 				}
 				blob.y = Math.max(-0.1, Math.min(1.1, blob.y));
 
@@ -427,6 +449,13 @@
 
 			function animate(time) {
 				ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+				// Remove fully faded blobs
+				for (let i = blobs.length - 1; i >= 0; i--) {
+					if (blobs[i].isCustom && blobs[i].opacity <= 0) {
+						blobs.splice(i, 1);
+					}
+				}
 
 				blobs.forEach(blob => {
 					updateBlob(blob, time);
@@ -461,6 +490,9 @@
 			}
 
 			function addBlobAtPosition(x, y) {
+				// Max 8 blobs total (3 preset + 5 custom)
+				if (blobs.length >= 8) return;
+
 				const theme = getTheme();
 				const color = generateRandomColor(theme);
 				blobs.push({
@@ -472,7 +504,9 @@
 					radius: config.baseRadius * (0.7 + Math.random() * 0.3),
 					color: color,
 					targetColor: color,
-					isCustom: true
+					isCustom: true,
+					createdAt: performance.now(),
+					opacity: 1
 				});
 			}
 
