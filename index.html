@@ -16,14 +16,18 @@
 	<meta name="author" content="Xav Kearney">
 	<meta name="keywords"
 		content="xav,kearney,xavier,xjfk,xjk,xav kearney, xavier kearney,imperial,eee,london,uk,engineer,ai,ml,otta">
-	<meta name="description" content="Xav Kearney - Engineer and entrepreneur. Co-founder of Otta.com, now building something new in fintech.">
+	<meta name="description"
+		content="Xav Kearney - Engineer and entrepreneur. Co-founder of Otta.com, now building something new in fintech.">
 	<meta property="og:title" content="Xav Kearney">
-	<meta property="og:description" content="Engineer and entrepreneur. Co-founder of Otta.com, now building something new in fintech.">
+	<meta property="og:description"
+		content="Engineer and entrepreneur. Co-founder of Otta.com, now building something new in fintech.">
 	<meta property="og:type" content="website">
-	<meta property="og:url" content="https://xavkearney.com">
+	<meta property="og:url" content="https://xav.ai">
 	<meta name="twitter:card" content="summary">
 	<meta name="twitter:title" content="Xav Kearney">
-	<meta name="twitter:description" content="Engineer and entrepreneur. Co-founder of Otta.com, now building something new in fintech.">
+	<meta name="twitter:description"
+		content="Engineer and entrepreneur. Co-founder of Otta.com, now building something new in fintech.">
+	<link rel="canonical" href="https://xav.ai">
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 	<link rel="preload" href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300&display=swap"
@@ -122,6 +126,22 @@
 			text-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 		}
 
+		a:focus {
+			outline: 2px solid var(--link-underline-hover);
+			outline-offset: 3px;
+			border-radius: 2px;
+		}
+
+		a:focus:not(:focus-visible) {
+			outline: none;
+		}
+
+		a:focus-visible {
+			outline: 2px solid var(--link-underline-hover);
+			outline-offset: 3px;
+			border-radius: 2px;
+		}
+
 		small {
 			display: block;
 			margin-top: 2.5rem;
@@ -199,6 +219,77 @@
 			pointer-events: none;
 			opacity: 0.7;
 		}
+
+		/* Text selection colors */
+		::selection {
+			background: rgba(167, 139, 250, 0.3);
+			color: var(--text);
+		}
+
+		[data-theme="dark"] ::selection {
+			background: rgba(167, 139, 250, 0.4);
+		}
+
+		/* Wave emoji animation */
+		.wave {
+			display: inline-block;
+			animation: none;
+		}
+
+		.wave:hover {
+			animation: wave 0.5s ease-in-out;
+		}
+
+		@keyframes wave {
+
+			0%,
+			100% {
+				transform: rotate(0deg);
+			}
+
+			25% {
+				transform: rotate(20deg);
+			}
+
+			75% {
+				transform: rotate(-15deg);
+			}
+		}
+
+		/* Page fade-in */
+		header,
+		main,
+		.theme-toggle {
+			animation: fadeIn 0.6s ease-out;
+		}
+
+		@keyframes fadeIn {
+			from {
+				opacity: 0;
+				transform: translateY(10px);
+			}
+
+			to {
+				opacity: 1;
+				transform: translateY(0);
+			}
+		}
+
+		/* Reduced motion */
+		@media (prefers-reduced-motion: reduce) {
+
+			*,
+			*::before,
+			*::after {
+				animation-duration: 0.01ms !important;
+				animation-iteration-count: 1 !important;
+				transition-duration: 0.01ms !important;
+			}
+
+			#blob-canvas {
+				display: none;
+			}
+		}
 	</style>
 </head>
 
@@ -212,19 +303,17 @@
 		<span class="moon">&#9790;</span>
 	</div>
 
-	<!-- Global site tag (gtag.js) - Google Analytics -->
-	<script async src="https://www.googletagmanager.com/gtag/js?id=UA-110453958-1"></script>
+	<!-- Google Analytics (GA4) -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=G-CF2279ZMGC"></script>
 	<script>
 		window.dataLayer = window.dataLayer || [];
 		function gtag() { dataLayer.push(arguments); }
 		gtag('js', new Date());
-
-		gtag('config', 'UA-110453958-1');
-		gtag('config', 'UA-96943011-1');
+		gtag('config', 'G-CF2279ZMGC');
 	</script>
 
 	<header id="header">
-		<h1>Hello 👋 I'm Xav.</h1>
+		<h1>Hello <span class="wave">👋</span> I'm Xav.</h1>
 	</header>
 	<main>
 		<p>I'm currently working on something new in fintech.</p>
