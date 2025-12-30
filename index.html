@@ -4,6 +4,7 @@
 <head>
 	<title>Xav Kearney</title>
 	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
 	<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 	<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
 	<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
@@ -20,39 +21,56 @@
 		as="style">
 	<link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300&display=swap" rel="stylesheet">
 	<style>
+		* {
+			box-sizing: border-box;
+		}
+
 		body {
 			font-family: 'Source Sans Pro', sans-serif;
-			padding: 2rem;
-			line-height: 1.6;
-			max-width: 64rem;
+			margin: 0;
+			padding: clamp(1.5rem, 5vw, 4rem);
+			line-height: 1.7;
+			color: #111;
+			min-height: 100vh;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+		}
+
+		header,
+		main {
+			width: 100%;
+			max-width: 650px;
 		}
 
 		h1 {
-			font-size: 6rem;
+			font-size: clamp(2.5rem, 8vw, 4rem);
+			font-weight: 300;
+			margin-bottom: 1.5rem;
+			letter-spacing: -0.02em;
 		}
 
 		p {
-			font-size: 2rem;
+			font-size: clamp(1.1rem, 3vw, 1.35rem);
+			margin-bottom: 1.25rem;
 		}
 
-		/* unvisited link */
-		a:link {
-			color: black;
+		a {
+			color: #111;
+			text-decoration-color: #999;
+			text-underline-offset: 0.15em;
+			transition: text-decoration-color 0.2s ease;
 		}
 
-		/* visited link */
-		a:visited {
-			color: black;
-		}
-
-		/* mouse over link */
 		a:hover {
-			color: black;
+			text-decoration-color: #111;
 		}
 
-		/* selected link */
-		a:active {
-			color: black;
+		small {
+			display: block;
+			margin-top: 2.5rem;
+			font-size: clamp(0.9rem, 2.5vw, 1rem);
+			color: #666;
 		}
 	</style>
 </head>
