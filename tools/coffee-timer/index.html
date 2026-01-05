@@ -78,6 +78,15 @@
             font-weight: 300;
             font-variant-numeric: tabular-nums;
             letter-spacing: -0.02em;
+            transition: color 0.2s ease;
+        }
+
+        .timer-display.at-target {
+            color: #22c55e;
+        }
+
+        .timer-display.over-target {
+            color: #ef4444;
         }
 
         /* Settings Section */
@@ -150,6 +159,63 @@
             font-variant-numeric: tabular-nums;
         }
 
+        /* Yield Prompt Modal */
+        .yield-prompt {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+        }
+
+        .yield-prompt[hidden] {
+            display: none;
+        }
+
+        .yield-prompt-content {
+            background: var(--bg);
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            min-width: 280px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .yield-prompt-content p {
+            margin: 0 0 1.5rem 0;
+            font-size: clamp(1.1rem, 3vw, 1.3rem);
+        }
+
+        .save-btn {
+            margin-top: 1.5rem;
+            width: 100%;
+            padding: 0.75rem 1.5rem;
+            border: 2px solid var(--text);
+            background: var(--text);
+            color: var(--bg);
+            font-family: inherit;
+            font-size: 1.1rem;
+            font-weight: 300;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .save-btn:hover {
+            opacity: 0.9;
+        }
+
+        .save-btn:focus {
+            outline: 2px solid var(--link-underline-hover);
+            outline-offset: 3px;
+        }
+
+        .save-btn:focus:not(:focus-visible) {
+            outline: none;
+        }
+
         /* History Section */
         .history-section {
             margin-top: 2rem;
@@ -196,12 +262,12 @@
         .history-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: clamp(0.9rem, 2.5vw, 1rem);
+            font-size: clamp(0.85rem, 2.5vw, 0.95rem);
         }
 
         .history-table th,
         .history-table td {
-            padding: 0.75rem 0.5rem;
+            padding: 0.6rem 0.35rem;
             text-align: left;
             border-bottom: 1px solid var(--link-underline);
         }
@@ -230,8 +296,8 @@
         @media (max-width: 400px) {
             .history-table th,
             .history-table td {
-                padding: 0.5rem 0.25rem;
-                font-size: 0.85rem;
+                padding: 0.5rem 0.2rem;
+                font-size: 0.8rem;
             }
         }
     </style>
@@ -242,6 +308,19 @@
         <span class="sun">&#9728;</span>
         <button class="toggle-switch" aria-label="Toggle dark mode"></button>
         <span class="moon">&#9790;</span>
+    </div>
+
+    <!-- Yield Prompt Modal -->
+    <div class="yield-prompt" id="yieldPrompt" hidden>
+        <div class="yield-prompt-content">
+            <p>Enter yield (g)</p>
+            <div class="setting-controls" style="justify-content: center;">
+                <button class="setting-btn" id="promptYieldDown" aria-label="Decrease yield">−</button>
+                <span class="setting-value" id="promptYieldValue">36.0</span>
+                <button class="setting-btn" id="promptYieldUp" aria-label="Increase yield">+</button>
+            </div>
+            <button class="save-btn" id="saveYieldBtn">Save</button>
+        </div>
     </div>
 
     <!-- Google Analytics (GA4) -->
@@ -268,7 +347,7 @@
         <!-- Settings Section -->
         <section class="settings-section">
             <div class="setting-row">
-                <span class="setting-label">Coffee (g)</span>
+                <span class="setting-label">Dose (g)</span>
                 <div class="setting-controls">
                     <button class="setting-btn" id="coffeeDown" aria-label="Decrease coffee amount">−</button>
                     <span class="setting-value" id="coffeeValue">18.0</span>
@@ -276,11 +355,19 @@
                 </div>
             </div>
             <div class="setting-row">
-                <span class="setting-label">Grind Setting</span>
+                <span class="setting-label">Grind</span>
                 <div class="setting-controls">
                     <button class="setting-btn" id="grindDown" aria-label="Decrease grind setting">−</button>
                     <span class="setting-value" id="grindValue">0</span>
                     <button class="setting-btn" id="grindUp" aria-label="Increase grind setting">+</button>
+                </div>
+            </div>
+            <div class="setting-row">
+                <span class="setting-label">Target (s)</span>
+                <div class="setting-controls">
+                    <button class="setting-btn" id="targetDown" aria-label="Decrease target time">−</button>
+                    <span class="setting-value" id="targetValue">28</span>
+                    <button class="setting-btn" id="targetUp" aria-label="Increase target time">+</button>
                 </div>
             </div>
         </section>
@@ -295,9 +382,10 @@
                 <thead>
                     <tr>
                         <th>Time</th>
-                        <th>Coffee</th>
+                        <th>Dose</th>
+                        <th>Yield</th>
+                        <th>Ratio</th>
                         <th>Grind</th>
-                        <th>Date</th>
                     </tr>
                 </thead>
                 <tbody id="historyBody">
@@ -373,30 +461,72 @@
             const grindValue = document.getElementById('grindValue');
             const grindUp = document.getElementById('grindUp');
             const grindDown = document.getElementById('grindDown');
+            const targetValue = document.getElementById('targetValue');
+            const targetUp = document.getElementById('targetUp');
+            const targetDown = document.getElementById('targetDown');
             const historyBody = document.getElementById('historyBody');
             const emptyHistory = document.getElementById('emptyHistory');
             const resetBtn = document.getElementById('resetBtn');
+
+            // Yield prompt elements
+            const yieldPrompt = document.getElementById('yieldPrompt');
+            const promptYieldValue = document.getElementById('promptYieldValue');
+            const promptYieldUp = document.getElementById('promptYieldUp');
+            const promptYieldDown = document.getElementById('promptYieldDown');
+            const saveYieldBtn = document.getElementById('saveYieldBtn');
+
+            // localStorage keys
+            const HISTORY_KEY = 'coffeeTimer_history';
+            const COFFEE_KEY = 'coffeeTimer_coffee';
+            const YIELD_KEY = 'coffeeTimer_yield';
+            const GRIND_KEY = 'coffeeTimer_grind';
+            const TARGET_KEY = 'coffeeTimer_targetTime';
 
             // State
             let isRunning = false;
             let startTime = null;
             let elapsedTime = 0;
             let animationId = null;
-            let coffee = 18.0;
-            let grind = 0;
+            let targetReached = false;
+            let pendingTime = null; // Stores time while yield prompt is shown
 
-            // localStorage key
-            const STORAGE_KEY = 'coffeeTimer_history';
+            // Load persisted settings or use defaults
+            let coffee = parseFloat(localStorage.getItem(COFFEE_KEY)) || 18.0;
+            let grind = parseInt(localStorage.getItem(GRIND_KEY)) || 0;
+            let targetTime = parseInt(localStorage.getItem(TARGET_KEY)) || 28;
+            let promptYield = parseFloat(localStorage.getItem(YIELD_KEY)) || 36.0;
+
+            // Haptic feedback
+            function vibrate(pattern) {
+                if (navigator.vibrate) {
+                    navigator.vibrate(pattern);
+                }
+            }
 
             // Timer functions
             function updateDisplay(time) {
                 timerDisplay.textContent = time.toFixed(1);
+
+                // Update color based on target time
+                timerDisplay.classList.remove('at-target', 'over-target');
+                if (time >= targetTime && time < targetTime + 3) {
+                    timerDisplay.classList.add('at-target');
+                } else if (time >= targetTime + 3) {
+                    timerDisplay.classList.add('over-target');
+                }
             }
 
             function tick() {
                 if (isRunning) {
                     elapsedTime = (Date.now() - startTime) / 1000;
                     updateDisplay(elapsedTime);
+
+                    // Vibrate when target time is reached (once)
+                    if (!targetReached && elapsedTime >= targetTime) {
+                        targetReached = true;
+                        vibrate(100);
+                    }
+
                     animationId = requestAnimationFrame(tick);
                 }
             }
@@ -405,9 +535,12 @@
                 isRunning = true;
                 startTime = Date.now();
                 elapsedTime = 0;
+                targetReached = false;
                 timerButton.textContent = 'Stop';
                 timerButton.classList.add('running');
                 timerButton.setAttribute('aria-label', 'Stop timer');
+                timerDisplay.classList.remove('at-target', 'over-target');
+                vibrate(50);
                 tick();
             }
 
@@ -420,15 +553,14 @@
                 timerButton.textContent = 'Start';
                 timerButton.classList.remove('running');
                 timerButton.setAttribute('aria-label', 'Start timer');
+                vibrate([50, 50, 50]);
 
-                // Save the entry if timer ran
+                // Show yield prompt if timer ran
                 if (elapsedTime > 0) {
-                    saveEntry(elapsedTime, coffee, grind);
+                    pendingTime = elapsedTime;
+                    promptYieldValue.textContent = promptYield.toFixed(1);
+                    yieldPrompt.hidden = false;
                 }
-
-                // Reset display
-                elapsedTime = 0;
-                updateDisplay(0);
             }
 
             timerButton.addEventListener('click', function () {
@@ -439,9 +571,37 @@
                 }
             });
 
+            // Yield prompt controls
+            promptYieldUp.addEventListener('click', function () {
+                promptYield = Math.round((promptYield + 0.1) * 10) / 10;
+                promptYieldValue.textContent = promptYield.toFixed(1);
+            });
+
+            promptYieldDown.addEventListener('click', function () {
+                if (promptYield > 0.1) {
+                    promptYield = Math.round((promptYield - 0.1) * 10) / 10;
+                    promptYieldValue.textContent = promptYield.toFixed(1);
+                }
+            });
+
+            saveYieldBtn.addEventListener('click', function () {
+                // Save the yield for next time
+                localStorage.setItem(YIELD_KEY, promptYield.toString());
+
+                // Save the entry
+                saveEntry(pendingTime, coffee, promptYield, grind);
+
+                // Hide prompt and reset
+                yieldPrompt.hidden = true;
+                pendingTime = null;
+                elapsedTime = 0;
+                updateDisplay(0);
+            });
+
             // Coffee controls
             function updateCoffeeDisplay() {
                 coffeeValue.textContent = coffee.toFixed(1);
+                localStorage.setItem(COFFEE_KEY, coffee.toString());
             }
 
             coffeeUp.addEventListener('click', function () {
@@ -450,9 +610,8 @@
             });
 
             coffeeDown.addEventListener('click', function () {
-                if (coffee > 0) {
+                if (coffee > 0.1) {
                     coffee = Math.round((coffee - 0.1) * 10) / 10;
-                    if (coffee < 0) coffee = 0;
                     updateCoffeeDisplay();
                 }
             });
@@ -460,6 +619,7 @@
             // Grind controls
             function updateGrindDisplay() {
                 grindValue.textContent = grind;
+                localStorage.setItem(GRIND_KEY, grind.toString());
             }
 
             grindUp.addEventListener('click', function () {
@@ -474,27 +634,32 @@
                 }
             });
 
+            // Target time controls
+            function updateTargetDisplay() {
+                targetValue.textContent = targetTime;
+                localStorage.setItem(TARGET_KEY, targetTime.toString());
+            }
+
+            targetUp.addEventListener('click', function () {
+                targetTime++;
+                updateTargetDisplay();
+            });
+
+            targetDown.addEventListener('click', function () {
+                if (targetTime > 1) {
+                    targetTime--;
+                    updateTargetDisplay();
+                }
+            });
+
             // History functions
             function loadHistory() {
-                const data = localStorage.getItem(STORAGE_KEY);
+                const data = localStorage.getItem(HISTORY_KEY);
                 return data ? JSON.parse(data) : [];
             }
 
             function saveHistory(history) {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
-            }
-
-            function formatDate(timestamp) {
-                const date = new Date(timestamp);
-                const now = new Date();
-                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-                const entryDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-
-                if (entryDate.getTime() === today.getTime()) {
-                    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                } else {
-                    return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
-                }
+                localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
             }
 
             function renderHistory() {
@@ -510,20 +675,25 @@
 
                 history.forEach(function (entry) {
                     const row = document.createElement('tr');
+                    const ratio = entry.ratio || (entry.yield && entry.coffee ? '1:' + (entry.yield / entry.coffee).toFixed(1) : '-');
                     row.innerHTML =
                         '<td>' + entry.time.toFixed(1) + 's</td>' +
-                        '<td>' + entry.coffee.toFixed(1) + 'g</td>' +
-                        '<td>' + entry.grind + '</td>' +
-                        '<td>' + formatDate(entry.timestamp) + '</td>';
+                        '<td>' + entry.coffee.toFixed(1) + '</td>' +
+                        '<td>' + (entry.yield ? entry.yield.toFixed(1) : '-') + '</td>' +
+                        '<td>' + ratio + '</td>' +
+                        '<td>' + entry.grind + '</td>';
                     historyBody.appendChild(row);
                 });
             }
 
-            function saveEntry(time, coffeeAmt, grindSetting) {
+            function saveEntry(time, coffeeAmt, yieldAmt, grindSetting) {
                 const history = loadHistory();
+                const ratio = '1:' + (yieldAmt / coffeeAmt).toFixed(1);
                 const entry = {
                     time: time,
                     coffee: coffeeAmt,
+                    yield: yieldAmt,
+                    ratio: ratio,
                     grind: grindSetting,
                     timestamp: Date.now()
                 };
@@ -535,12 +705,15 @@
             // Reset button
             resetBtn.addEventListener('click', function () {
                 if (confirm('Clear all history?')) {
-                    localStorage.removeItem(STORAGE_KEY);
+                    localStorage.removeItem(HISTORY_KEY);
                     renderHistory();
                 }
             });
 
-            // Initialize
+            // Initialize displays
+            coffeeValue.textContent = coffee.toFixed(1);
+            grindValue.textContent = grind;
+            targetValue.textContent = targetTime;
             renderHistory();
         })();
     </script>
