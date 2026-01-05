@@ -1,0 +1,159 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+	<title>Tools - Xav Kearney</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+	<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+	<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+	<link rel="manifest" href="/site.webmanifest">
+	<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+	<meta name="msapplication-TileColor" content="#da532c">
+	<meta name="theme-color" content="#ffffff">
+	<meta name="author" content="Xav Kearney">
+	<meta name="description" content="A collection of useful web tools by Xav Kearney.">
+	<meta property="og:title" content="Tools - Xav Kearney">
+	<meta property="og:description" content="A collection of useful web tools.">
+	<meta property="og:type" content="website">
+	<meta property="og:url" content="https://xav.ai/tools">
+	<link rel="canonical" href="https://xav.ai/tools">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link rel="preload" href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300&display=swap"
+		as="style">
+	<link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="../css/shared.css">
+	<style>
+		.back-link {
+			margin-bottom: 2rem;
+			font-size: clamp(0.9rem, 2.5vw, 1rem);
+		}
+
+		.tools-list {
+			list-style: none;
+			padding: 0;
+			margin: 2rem 0;
+		}
+
+		.tool-item {
+			margin-bottom: 1.5rem;
+			padding-bottom: 1.5rem;
+			border-bottom: 1px solid var(--link-underline);
+		}
+
+		.tool-item:last-child {
+			border-bottom: none;
+		}
+
+		.tool-name {
+			font-size: clamp(1.2rem, 3.5vw, 1.5rem);
+			margin-bottom: 0.25rem;
+		}
+
+		.tool-description {
+			font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+			color: var(--text-muted);
+			margin: 0;
+		}
+
+		.empty-state {
+			color: var(--text-muted);
+			font-style: italic;
+		}
+	</style>
+</head>
+
+<body>
+	<div class="theme-toggle">
+		<span class="sun">&#9728;</span>
+		<button class="toggle-switch" aria-label="Toggle dark mode"></button>
+		<span class="moon">&#9790;</span>
+	</div>
+
+	<!-- Google Analytics (GA4) -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=G-CF2279ZMGC"></script>
+	<script>
+		window.dataLayer = window.dataLayer || [];
+		function gtag() { dataLayer.push(arguments); }
+		gtag('js', new Date());
+		gtag('config', 'G-CF2279ZMGC');
+	</script>
+
+	<header>
+		<p class="back-link"><a href="/">&larr; Back to xav.ai</a></p>
+		<h1>Tools</h1>
+	</header>
+
+	<main>
+		<p>A collection of small, useful web tools. All run entirely in your browser - no data is sent to any server.
+		</p>
+
+		<ul class="tools-list">
+			<!-- Example tool entry (uncomment when first tool is added):
+			<li class="tool-item">
+				<a href="/tools/example/" class="tool-name">Example Tool</a>
+				<p class="tool-description">Brief description of what this tool does.</p>
+			</li>
+			-->
+			<li class="empty-state">No tools yet. Check back soon!</li>
+		</ul>
+	</main>
+
+	<script>
+		(function () {
+			const toggle = document.querySelector('.toggle-switch');
+			const sunIcon = document.querySelector('.sun');
+			const moonIcon = document.querySelector('.moon');
+			const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+
+			function getSystemTheme() {
+				return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+			}
+
+			function getEffectiveTheme() {
+				const saved = localStorage.getItem('theme');
+				return saved || getSystemTheme();
+			}
+
+			function updateIcons(theme) {
+				if (theme === 'dark') {
+					sunIcon.classList.remove('active');
+					moonIcon.classList.add('active');
+				} else {
+					sunIcon.classList.add('active');
+					moonIcon.classList.remove('active');
+				}
+			}
+
+			function updateThemeColor(theme) {
+				themeColorMeta.setAttribute('content', theme === 'dark' ? '#1a1a1a' : '#ffffff');
+			}
+
+			function applyTheme(theme) {
+				document.documentElement.setAttribute('data-theme', theme);
+				updateIcons(theme);
+				updateThemeColor(theme);
+			}
+
+			applyTheme(getEffectiveTheme());
+
+			toggle.addEventListener('click', function () {
+				const current = document.documentElement.getAttribute('data-theme') || getSystemTheme();
+				const next = current === 'dark' ? 'light' : 'dark';
+				localStorage.setItem('theme', next);
+				applyTheme(next);
+			});
+
+			window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (e) {
+				if (!localStorage.getItem('theme')) {
+					applyTheme(e.matches ? 'dark' : 'light');
+				}
+			});
+		})();
+	</script>
+</body>
+
+</html>
