@@ -23,134 +23,169 @@ Each tool should have its own directory:
     └── [optional assets]   # Images, additional JS if needed
 ```
 
+**Important:** Always use relative paths (e.g., `../../css/shared.css`, `../`) instead of absolute paths (e.g., `/css/shared.css`, `/tools/`). This ensures the site works when opened locally via `file://` URLs during development.
+
 ## HTML Template
 
 Use this as a starting point for any new tool:
 
 ```html
-<!DOCTYPE HTML>
+<!DOCTYPE html>
 <html>
-<head>
+  <head>
     <title>[Tool Name] - Xav Kearney</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <!-- Favicons -->
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-    <link rel="manifest" href="/site.webmanifest">
-    <meta name="theme-color" content="#ffffff">
+    <!-- Favicons (use relative paths for local file:// compatibility) -->
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="../../apple-touch-icon.png"
+    />
+    <link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="../../favicon-32x32.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="../../favicon-16x16.png"
+    />
+    <link rel="manifest" href="../../site.webmanifest" />
+    <meta name="theme-color" content="#ffffff" />
 
     <!-- SEO -->
-    <meta name="author" content="Xav Kearney">
-    <meta name="description" content="[Brief tool description]">
-    <meta property="og:title" content="[Tool Name] - Xav Kearney">
-    <meta property="og:description" content="[Brief tool description]">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://xav.ai/tools/[tool-name]/">
-    <link rel="canonical" href="https://xav.ai/tools/[tool-name]/">
+    <meta name="author" content="Xav Kearney" />
+    <meta name="description" content="[Brief tool description]" />
+    <meta property="og:title" content="[Tool Name] - Xav Kearney" />
+    <meta property="og:description" content="[Brief tool description]" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://xav.ai/tools/[tool-name]/" />
+    <link rel="canonical" href="https://xav.ai/tools/[tool-name]/" />
 
-    <!-- Fonts & Shared CSS -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/css/shared.css">
+    <!-- Fonts & Shared CSS (use relative paths for local file:// compatibility) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../css/shared.css" />
 
     <style>
-        /* Tool-specific styles go here */
-        .back-link {
-            margin-bottom: 2rem;
-            font-size: clamp(0.9rem, 2.5vw, 1rem);
-        }
+      /* Tool-specific styles go here */
+      .back-link {
+        margin-bottom: 2rem;
+        font-size: clamp(0.9rem, 2.5vw, 1rem);
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <!-- Theme Toggle (required) -->
     <div class="theme-toggle">
-        <span class="sun">&#9728;</span>
-        <button class="toggle-switch" aria-label="Toggle dark mode"></button>
-        <span class="moon">&#9790;</span>
+      <span class="sun">&#9728;</span>
+      <button class="toggle-switch" aria-label="Toggle dark mode"></button>
+      <span class="moon">&#9790;</span>
     </div>
 
     <!-- Google Analytics (GA4) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-CF2279ZMGC"></script>
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-CF2279ZMGC"
+    ></script>
     <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag() { dataLayer.push(arguments); }
-        gtag('js', new Date());
-        gtag('config', 'G-CF2279ZMGC');
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+      gtag("config", "G-CF2279ZMGC");
     </script>
 
     <header>
-        <p class="back-link"><a href="/tools/">&larr; Back to Tools</a></p>
-        <h1>[Tool Name]</h1>
+      <p class="back-link"><a href="../">&larr; Back to Tools</a></p>
+      <h1>[Tool Name]</h1>
     </header>
 
     <main>
-        <!-- Tool content goes here -->
+      <!-- Tool content goes here -->
     </main>
 
     <!-- Theme Toggle Script (required) -->
     <script>
-        (function () {
-            const toggle = document.querySelector('.toggle-switch');
-            const sunIcon = document.querySelector('.sun');
-            const moonIcon = document.querySelector('.moon');
-            const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+      (function () {
+        const toggle = document.querySelector(".toggle-switch");
+        const sunIcon = document.querySelector(".sun");
+        const moonIcon = document.querySelector(".moon");
+        const themeColorMeta = document.querySelector(
+          'meta[name="theme-color"]'
+        );
 
-            function getSystemTheme() {
-                return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        function getSystemTheme() {
+          return window.matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light";
+        }
+
+        function getEffectiveTheme() {
+          const saved = localStorage.getItem("theme");
+          return saved || getSystemTheme();
+        }
+
+        function updateIcons(theme) {
+          if (theme === "dark") {
+            sunIcon.classList.remove("active");
+            moonIcon.classList.add("active");
+          } else {
+            sunIcon.classList.add("active");
+            moonIcon.classList.remove("active");
+          }
+        }
+
+        function updateThemeColor(theme) {
+          themeColorMeta.setAttribute(
+            "content",
+            theme === "dark" ? "#1a1a1a" : "#ffffff"
+          );
+        }
+
+        function applyTheme(theme) {
+          document.documentElement.setAttribute("data-theme", theme);
+          updateIcons(theme);
+          updateThemeColor(theme);
+        }
+
+        applyTheme(getEffectiveTheme());
+
+        toggle.addEventListener("click", function () {
+          const current =
+            document.documentElement.getAttribute("data-theme") ||
+            getSystemTheme();
+          const next = current === "dark" ? "light" : "dark";
+          localStorage.setItem("theme", next);
+          applyTheme(next);
+        });
+
+        window
+          .matchMedia("(prefers-color-scheme: dark)")
+          .addEventListener("change", function (e) {
+            if (!localStorage.getItem("theme")) {
+              applyTheme(e.matches ? "dark" : "light");
             }
-
-            function getEffectiveTheme() {
-                const saved = localStorage.getItem('theme');
-                return saved || getSystemTheme();
-            }
-
-            function updateIcons(theme) {
-                if (theme === 'dark') {
-                    sunIcon.classList.remove('active');
-                    moonIcon.classList.add('active');
-                } else {
-                    sunIcon.classList.add('active');
-                    moonIcon.classList.remove('active');
-                }
-            }
-
-            function updateThemeColor(theme) {
-                themeColorMeta.setAttribute('content', theme === 'dark' ? '#1a1a1a' : '#ffffff');
-            }
-
-            function applyTheme(theme) {
-                document.documentElement.setAttribute('data-theme', theme);
-                updateIcons(theme);
-                updateThemeColor(theme);
-            }
-
-            applyTheme(getEffectiveTheme());
-
-            toggle.addEventListener('click', function () {
-                const current = document.documentElement.getAttribute('data-theme') || getSystemTheme();
-                const next = current === 'dark' ? 'light' : 'dark';
-                localStorage.setItem('theme', next);
-                applyTheme(next);
-            });
-
-            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (e) {
-                if (!localStorage.getItem('theme')) {
-                    applyTheme(e.matches ? 'dark' : 'light');
-                }
-            });
-        })();
+          });
+      })();
     </script>
 
     <!-- Tool-specific JavaScript -->
     <script>
-        // Tool logic goes here
+      // Tool logic goes here
     </script>
-</body>
+  </body>
 </html>
 ```
 
@@ -158,15 +193,15 @@ Use this as a starting point for any new tool:
 
 ### Colors (use CSS variables)
 
-| Variable | Light Mode | Dark Mode | Usage |
-|----------|------------|-----------|-------|
-| `--bg` | #fff | #1a1a1a | Background |
-| `--text` | #111 | #eee | Primary text |
-| `--text-muted` | #666 | #999 | Secondary text |
-| `--link-underline` | #999 | #666 | Link underline |
-| `--link-underline-hover` | #111 | #eee | Link underline on hover |
-| `--toggle-bg` | #e0e0e0 | #444 | Toggle background |
-| `--toggle-knob` | #fff | #1a1a1a | Toggle knob |
+| Variable                 | Light Mode | Dark Mode | Usage                   |
+| ------------------------ | ---------- | --------- | ----------------------- |
+| `--bg`                   | #fff       | #1a1a1a   | Background              |
+| `--text`                 | #111       | #eee      | Primary text            |
+| `--text-muted`           | #666       | #999      | Secondary text          |
+| `--link-underline`       | #999       | #666      | Link underline          |
+| `--link-underline-hover` | #111       | #eee      | Link underline on hover |
+| `--toggle-bg`            | #e0e0e0    | #444      | Toggle background       |
+| `--toggle-knob`          | #fff       | #1a1a1a   | Toggle knob             |
 
 Accent color for selections: `rgba(167, 139, 250, 0.3)` (purple)
 
@@ -188,89 +223,93 @@ Accent color for selections: `rgba(167, 139, 250, 0.3)` (purple)
 ### Interactive Elements
 
 **Buttons:**
+
 ```css
 .btn {
-    background: var(--text);
-    color: var(--bg);
-    border: none;
-    padding: 0.75rem 1.5rem;
-    font-family: inherit;
-    font-size: 1rem;
-    font-weight: 300;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: opacity 0.2s ease, transform 0.2s ease;
+  background: var(--text);
+  color: var(--bg);
+  border: none;
+  padding: 0.75rem 1.5rem;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 300;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 .btn:hover {
-    opacity: 0.9;
-    transform: translateY(-1px);
+  opacity: 0.9;
+  transform: translateY(-1px);
 }
 
 .btn:active {
-    transform: translateY(0);
+  transform: translateY(0);
 }
 
 .btn:focus {
-    outline: 2px solid var(--link-underline-hover);
-    outline-offset: 3px;
+  outline: 2px solid var(--link-underline-hover);
+  outline-offset: 3px;
 }
 
 .btn:focus:not(:focus-visible) {
-    outline: none;
+  outline: none;
 }
 ```
 
 **Secondary/outline buttons:**
+
 ```css
 .btn-secondary {
-    background: transparent;
-    color: var(--text);
-    border: 1px solid var(--link-underline);
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--link-underline);
 }
 
 .btn-secondary:hover {
-    border-color: var(--link-underline-hover);
+  border-color: var(--link-underline-hover);
 }
 ```
 
 **Inputs:**
+
 ```css
 input,
 textarea,
 select {
-    font-family: inherit;
-    font-size: 1rem;
-    font-weight: 300;
-    padding: 0.75rem;
-    border: 1px solid var(--link-underline);
-    border-radius: 4px;
-    background: var(--bg);
-    color: var(--text);
-    width: 100%;
-    transition: border-color 0.2s ease;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 300;
+  padding: 0.75rem;
+  border: 1px solid var(--link-underline);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--text);
+  width: 100%;
+  transition: border-color 0.2s ease;
 }
 
 input:focus,
 textarea:focus,
 select:focus {
-    outline: none;
-    border-color: var(--link-underline-hover);
+  outline: none;
+  border-color: var(--link-underline-hover);
 }
 
 input::placeholder,
 textarea::placeholder {
-    color: var(--text-muted);
+  color: var(--text-muted);
 }
 ```
 
 **Labels:**
+
 ```css
 label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-size: clamp(0.95rem, 2.5vw, 1.1rem);
-    color: var(--text-muted);
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+  color: var(--text-muted);
 }
 ```
 
@@ -280,13 +319,13 @@ Use localStorage for saving user preferences or data:
 
 ```javascript
 // Save data
-localStorage.setItem('toolName_key', JSON.stringify(data));
+localStorage.setItem("toolName_key", JSON.stringify(data));
 
 // Load data
-const data = JSON.parse(localStorage.getItem('toolName_key')) || defaultValue;
+const data = JSON.parse(localStorage.getItem("toolName_key")) || defaultValue;
 
 // Clear data
-localStorage.removeItem('toolName_key');
+localStorage.removeItem("toolName_key");
 ```
 
 **Key naming convention:** `toolName_settingName` (e.g., `timer_duration`, `converter_lastUnit`)
@@ -328,8 +367,8 @@ After creating your tool, add an entry to `/tools/index.html`:
 
 ```html
 <li class="tool-item">
-    <a href="/tools/[tool-name]/" class="tool-name">[Tool Name]</a>
-    <p class="tool-description">[Brief description - one sentence]</p>
+  <a href="[tool-name]/" class="tool-name">[Tool Name]</a>
+  <p class="tool-description">[Brief description - one sentence]</p>
 </li>
 ```
 
@@ -363,6 +402,7 @@ Tools that fit well with this format:
 ## Questions?
 
 If you're an LLM building a tool and have questions about these guidelines, prioritize:
+
 1. Simplicity over features
 2. Mobile-friendliness
 3. Accessibility
