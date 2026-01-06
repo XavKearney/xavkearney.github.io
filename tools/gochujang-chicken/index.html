@@ -1,0 +1,1015 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>Gochujang Chicken Recipe Tracker - Xav Kearney</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Favicons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="../../apple-touch-icon.png">
+    <link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../favicon-16x16.png">
+    <link rel="manifest" href="../../site.webmanifest">
+    <meta name="theme-color" content="#ffffff">
+
+    <!-- SEO -->
+    <meta name="author" content="Xav Kearney">
+    <meta name="description" content="Track and rate gochujang chicken recipe iterations with different ingredient combinations.">
+    <meta property="og:title" content="Gochujang Chicken Recipe Tracker - Xav Kearney">
+    <meta property="og:description" content="Track and rate gochujang chicken recipe iterations with different ingredient combinations.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://xav.ai/tools/gochujang-chicken/">
+    <link rel="canonical" href="https://xav.ai/tools/gochujang-chicken/">
+
+    <!-- Fonts & Shared CSS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/shared.css">
+
+    <style>
+        .back-link {
+            margin-bottom: 2rem;
+            font-size: clamp(0.9rem, 2.5vw, 1rem);
+        }
+
+        /* Ingredients Section */
+        .ingredients-section {
+            margin-bottom: 2rem;
+        }
+
+        .ingredient-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--link-underline);
+        }
+
+        .ingredient-row:last-of-type {
+            border-bottom: 2px solid var(--link-underline);
+        }
+
+        .ingredient-label {
+            font-size: clamp(1rem, 3vw, 1.2rem);
+            color: var(--text);
+            min-width: 140px;
+        }
+
+        .ingredient-label.chicken {
+            font-weight: 400;
+        }
+
+        .ingredient-unit {
+            font-size: clamp(0.85rem, 2.5vw, 0.95rem);
+            color: var(--text-muted);
+            margin-left: 0.3rem;
+        }
+
+        .ingredient-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .ingredient-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 2px solid var(--text);
+            background: transparent;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 1.5rem;
+            font-weight: 300;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            line-height: 1;
+        }
+
+        .ingredient-btn:hover {
+            background: var(--text);
+            color: var(--bg);
+        }
+
+        .ingredient-btn:focus {
+            outline: 2px solid var(--link-underline-hover);
+            outline-offset: 3px;
+        }
+
+        .ingredient-btn:focus:not(:focus-visible) {
+            outline: none;
+        }
+
+        .ingredient-value {
+            min-width: 60px;
+            text-align: center;
+            font-size: clamp(1.2rem, 4vw, 1.5rem);
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Custom Ingredients */
+        .custom-ingredients {
+            margin-top: 2rem;
+        }
+
+        .custom-ingredient-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .custom-ingredient-name {
+            flex: 1;
+            padding: 0.5rem;
+            font-family: inherit;
+            font-size: 1rem;
+            border: 2px solid var(--link-underline);
+            background: var(--bg);
+            color: var(--text);
+            border-radius: 4px;
+        }
+
+        .custom-ingredient-unit {
+            padding: 0.5rem;
+            font-family: inherit;
+            font-size: 1rem;
+            border: 2px solid var(--link-underline);
+            background: var(--bg);
+            color: var(--text);
+            border-radius: 4px;
+        }
+
+        .remove-ingredient-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 2px solid #ef4444;
+            background: transparent;
+            color: #ef4444;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .remove-ingredient-btn:hover {
+            background: #ef4444;
+            color: white;
+        }
+
+        .add-ingredient-btn {
+            width: 100%;
+            padding: 0.75rem;
+            margin-top: 1rem;
+            border: 2px dashed var(--link-underline);
+            background: transparent;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .add-ingredient-btn:hover {
+            border-color: var(--text);
+            border-style: solid;
+        }
+
+        /* Save Button */
+        .save-section {
+            margin: 2rem 0;
+            text-align: center;
+        }
+
+        .save-recipe-btn {
+            padding: 1rem 2rem;
+            border: 2px solid var(--text);
+            background: var(--text);
+            color: var(--bg);
+            font-family: inherit;
+            font-size: 1.2rem;
+            font-weight: 300;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .save-recipe-btn:hover {
+            opacity: 0.9;
+        }
+
+        .save-recipe-btn:focus {
+            outline: 2px solid var(--link-underline-hover);
+            outline-offset: 3px;
+        }
+
+        /* Rating Modal */
+        .rating-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+        }
+
+        .rating-modal[hidden] {
+            display: none;
+        }
+
+        .rating-modal-content {
+            background: var(--bg);
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            min-width: 300px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .rating-modal-content h3 {
+            margin: 0 0 1.5rem 0;
+            font-size: clamp(1.2rem, 4vw, 1.5rem);
+            font-weight: 300;
+        }
+
+        .stars-container {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .star {
+            font-size: 2.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .star:hover {
+            transform: scale(1.1);
+        }
+
+        .star.filled {
+            color: #fbbf24;
+        }
+
+        .star.empty {
+            color: var(--link-underline);
+        }
+
+        .rating-buttons {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+        }
+
+        .submit-rating-btn, .skip-rating-btn {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 300;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .submit-rating-btn {
+            border: 2px solid var(--text);
+            background: var(--text);
+            color: var(--bg);
+        }
+
+        .submit-rating-btn:hover {
+            opacity: 0.9;
+        }
+
+        .skip-rating-btn {
+            border: 2px solid var(--link-underline);
+            background: transparent;
+            color: var(--text);
+        }
+
+        .skip-rating-btn:hover {
+            border-color: var(--text);
+        }
+
+        /* History Section */
+        .history-section {
+            margin-top: 2rem;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .history-header h2 {
+            margin: 0;
+            font-size: clamp(1.3rem, 4vw, 1.6rem);
+        }
+
+        .clear-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--link-underline);
+            background: transparent;
+            color: var(--text);
+            font-family: inherit;
+            font-size: clamp(0.85rem, 2.5vw, 0.95rem);
+            font-weight: 300;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .clear-btn:hover {
+            border-color: var(--link-underline-hover);
+        }
+
+        .history-table-container {
+            overflow-x: auto;
+            margin-top: 1rem;
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: clamp(0.85rem, 2.5vw, 0.95rem);
+        }
+
+        .history-table th {
+            text-align: left;
+            padding: 0.75rem 0.5rem;
+            border-bottom: 2px solid var(--link-underline);
+            color: var(--text-muted);
+            font-weight: 300;
+        }
+
+        .history-table td {
+            padding: 0.75rem 0.5rem;
+            border-bottom: 1px solid var(--link-underline);
+        }
+
+        .history-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .rating-stars {
+            color: #fbbf24;
+            font-size: 1rem;
+        }
+
+        .rating-number {
+            color: var(--text-muted);
+            margin-left: 0.25rem;
+            font-size: 0.85em;
+        }
+
+        .delete-entry-btn {
+            background: transparent;
+            border: 1px solid var(--link-underline);
+            color: var(--text);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s ease;
+        }
+
+        .delete-entry-btn:hover {
+            border-color: #ef4444;
+            color: #ef4444;
+        }
+
+        .empty-history {
+            color: var(--text-muted);
+            font-style: italic;
+            text-align: center;
+            padding: 2rem 0;
+        }
+
+        .expandable-cell {
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        .expandable-cell.expanded {
+            white-space: normal;
+        }
+
+        @media (max-width: 600px) {
+            .history-table {
+                font-size: 0.75rem;
+            }
+
+            .history-table th,
+            .history-table td {
+                padding: 0.5rem 0.25rem;
+            }
+
+            .ingredient-label {
+                min-width: 100px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Theme Toggle -->
+    <div class="theme-toggle">
+        <span class="sun">&#9728;</span>
+        <button class="toggle-switch" aria-label="Toggle dark mode"></button>
+        <span class="moon">&#9790;</span>
+    </div>
+
+    <!-- Rating Modal -->
+    <div class="rating-modal" id="ratingModal" hidden>
+        <div class="rating-modal-content">
+            <h3>Rate this recipe</h3>
+            <div class="stars-container" id="starsContainer"></div>
+            <div class="rating-buttons">
+                <button class="skip-rating-btn" id="skipRatingBtn">Skip</button>
+                <button class="submit-rating-btn" id="submitRatingBtn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Google Analytics (GA4) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-CF2279ZMGC"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'G-CF2279ZMGC');
+    </script>
+
+    <header>
+        <p class="back-link"><a href="../">&larr; Back to Tools</a></p>
+        <h1>Gochujang Chicken</h1>
+    </header>
+
+    <main>
+        <!-- Ingredients Section -->
+        <section class="ingredients-section">
+            <h2>Recipe Ingredients</h2>
+
+            <!-- Chicken -->
+            <div class="ingredient-row">
+                <div>
+                    <span class="ingredient-label chicken">Chicken</span>
+                    <span class="ingredient-unit">(g)</span>
+                </div>
+                <div class="ingredient-controls">
+                    <button class="ingredient-btn" data-ingredient="chicken" data-action="decrease">−</button>
+                    <span class="ingredient-value" id="chicken-value">500.0</span>
+                    <button class="ingredient-btn" data-ingredient="chicken" data-action="increase">+</button>
+                </div>
+            </div>
+
+            <!-- Default Sauce Ingredients -->
+            <div class="ingredient-row">
+                <div>
+                    <span class="ingredient-label">Gochujang</span>
+                    <span class="ingredient-unit">(tbsp)</span>
+                </div>
+                <div class="ingredient-controls">
+                    <button class="ingredient-btn" data-ingredient="gochujang" data-action="decrease">−</button>
+                    <span class="ingredient-value" id="gochujang-value">2.0</span>
+                    <button class="ingredient-btn" data-ingredient="gochujang" data-action="increase">+</button>
+                </div>
+            </div>
+
+            <div class="ingredient-row">
+                <div>
+                    <span class="ingredient-label">Rice Wine Vinegar</span>
+                    <span class="ingredient-unit">(tbsp)</span>
+                </div>
+                <div class="ingredient-controls">
+                    <button class="ingredient-btn" data-ingredient="riceWineVinegar" data-action="decrease">−</button>
+                    <span class="ingredient-value" id="riceWineVinegar-value">1.0</span>
+                    <button class="ingredient-btn" data-ingredient="riceWineVinegar" data-action="increase">+</button>
+                </div>
+            </div>
+
+            <div class="ingredient-row">
+                <div>
+                    <span class="ingredient-label">Brown Sugar</span>
+                    <span class="ingredient-unit">(tbsp)</span>
+                </div>
+                <div class="ingredient-controls">
+                    <button class="ingredient-btn" data-ingredient="brownSugar" data-action="decrease">−</button>
+                    <span class="ingredient-value" id="brownSugar-value">1.0</span>
+                    <button class="ingredient-btn" data-ingredient="brownSugar" data-action="increase">+</button>
+                </div>
+            </div>
+
+            <div class="ingredient-row">
+                <div>
+                    <span class="ingredient-label">Soy Sauce</span>
+                    <span class="ingredient-unit">(tbsp)</span>
+                </div>
+                <div class="ingredient-controls">
+                    <button class="ingredient-btn" data-ingredient="soySauce" data-action="decrease">−</button>
+                    <span class="ingredient-value" id="soySauce-value">1.0</span>
+                    <button class="ingredient-btn" data-ingredient="soySauce" data-action="increase">+</button>
+                </div>
+            </div>
+
+            <div class="ingredient-row">
+                <div>
+                    <span class="ingredient-label">Garlic</span>
+                    <span class="ingredient-unit">(cloves)</span>
+                </div>
+                <div class="ingredient-controls">
+                    <button class="ingredient-btn" data-ingredient="garlic" data-action="decrease">−</button>
+                    <span class="ingredient-value" id="garlic-value">3.0</span>
+                    <button class="ingredient-btn" data-ingredient="garlic" data-action="increase">+</button>
+                </div>
+            </div>
+
+            <div class="ingredient-row">
+                <div>
+                    <span class="ingredient-label">Ginger</span>
+                    <span class="ingredient-unit">(tbsp)</span>
+                </div>
+                <div class="ingredient-controls">
+                    <button class="ingredient-btn" data-ingredient="ginger" data-action="decrease">−</button>
+                    <span class="ingredient-value" id="ginger-value">1.0</span>
+                    <button class="ingredient-btn" data-ingredient="ginger" data-action="increase">+</button>
+                </div>
+            </div>
+
+            <!-- Custom Ingredients Container -->
+            <div class="custom-ingredients" id="customIngredientsContainer"></div>
+
+            <button class="add-ingredient-btn" id="addIngredientBtn">+ Add Custom Ingredient</button>
+        </section>
+
+        <!-- Save Button -->
+        <section class="save-section">
+            <button class="save-recipe-btn" id="saveRecipeBtn">Save Recipe</button>
+        </section>
+
+        <!-- History Section -->
+        <section class="history-section">
+            <div class="history-header">
+                <h2>Recipe History</h2>
+                <button class="clear-btn" id="clearBtn">Clear All</button>
+            </div>
+            <div class="history-table-container">
+                <table class="history-table" id="historyTable">
+                    <thead>
+                        <tr>
+                            <th>Rating</th>
+                            <th>Chicken (g)</th>
+                            <th>Ingredients</th>
+                            <th>Date</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyBody"></tbody>
+                </table>
+                <p class="empty-history" id="emptyHistory">No recipes saved yet.</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- Theme Toggle Script -->
+    <script>
+        (function () {
+            const toggle = document.querySelector('.toggle-switch');
+            const sunIcon = document.querySelector('.sun');
+            const moonIcon = document.querySelector('.moon');
+            const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+
+            function getSystemTheme() {
+                return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            }
+
+            function getEffectiveTheme() {
+                const saved = localStorage.getItem('theme');
+                return saved || getSystemTheme();
+            }
+
+            function updateIcons(theme) {
+                if (theme === 'dark') {
+                    sunIcon.classList.remove('active');
+                    moonIcon.classList.add('active');
+                } else {
+                    sunIcon.classList.add('active');
+                    moonIcon.classList.remove('active');
+                }
+            }
+
+            function updateThemeColor(theme) {
+                themeColorMeta.setAttribute('content', theme === 'dark' ? '#1a1a1a' : '#ffffff');
+            }
+
+            function applyTheme(theme) {
+                document.documentElement.setAttribute('data-theme', theme);
+                updateIcons(theme);
+                updateThemeColor(theme);
+            }
+
+            applyTheme(getEffectiveTheme());
+
+            toggle.addEventListener('click', function () {
+                const current = document.documentElement.getAttribute('data-theme') || getSystemTheme();
+                const next = current === 'dark' ? 'light' : 'dark';
+                localStorage.setItem('theme', next);
+                applyTheme(next);
+            });
+
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (e) {
+                if (!localStorage.getItem('theme')) {
+                    applyTheme(e.matches ? 'dark' : 'light');
+                }
+            });
+        })();
+    </script>
+
+    <!-- Recipe Tracker JavaScript -->
+    <script>
+        (function () {
+            const STORAGE_KEY = 'gochujangChicken_recipes';
+            const INGREDIENTS_KEY = 'gochujangChicken_ingredients';
+
+            // Default ingredients with their units
+            const defaultIngredients = {
+                chicken: { value: 500.0, unit: 'g', displayName: 'Chicken' },
+                gochujang: { value: 2.0, unit: 'tbsp', displayName: 'Gochujang' },
+                riceWineVinegar: { value: 1.0, unit: 'tbsp', displayName: 'Rice Wine Vinegar' },
+                brownSugar: { value: 1.0, unit: 'tbsp', displayName: 'Brown Sugar' },
+                soySauce: { value: 1.0, unit: 'tbsp', displayName: 'Soy Sauce' },
+                garlic: { value: 3.0, unit: 'cloves', displayName: 'Garlic' },
+                ginger: { value: 1.0, unit: 'tbsp', displayName: 'Ginger' }
+            };
+
+            let ingredients = {};
+            let customIngredients = [];
+            let pendingRecipe = null;
+
+            // Load saved ingredients or use defaults
+            function loadIngredients() {
+                const saved = localStorage.getItem(INGREDIENTS_KEY);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    ingredients = parsed.ingredients || {};
+                    customIngredients = parsed.custom || [];
+                } else {
+                    ingredients = JSON.parse(JSON.stringify(defaultIngredients));
+                    customIngredients = [];
+                }
+            }
+
+            // Save ingredients to localStorage
+            function saveIngredients() {
+                localStorage.setItem(INGREDIENTS_KEY, JSON.stringify({
+                    ingredients: ingredients,
+                    custom: customIngredients
+                }));
+            }
+
+            // Update ingredient value
+            function updateIngredient(id, delta) {
+                if (ingredients[id]) {
+                    ingredients[id].value = Math.max(0, Math.round((ingredients[id].value + delta) * 2) / 2);
+                    document.getElementById(id + '-value').textContent = ingredients[id].value.toFixed(1);
+                    saveIngredients();
+                }
+            }
+
+            // Initialize ingredient displays
+            function initializeIngredients() {
+                for (const [id, data] of Object.entries(ingredients)) {
+                    const elem = document.getElementById(id + '-value');
+                    if (elem) {
+                        elem.textContent = data.value.toFixed(1);
+                    }
+                }
+                renderCustomIngredients();
+            }
+
+            // Custom ingredients
+            function addCustomIngredient() {
+                const id = 'custom_' + Date.now();
+                customIngredients.push({
+                    id: id,
+                    name: '',
+                    value: 1.0,
+                    unit: 'tbsp'
+                });
+                renderCustomIngredients();
+            }
+
+            function removeCustomIngredient(id) {
+                customIngredients = customIngredients.filter(ing => ing.id !== id);
+                saveIngredients();
+                renderCustomIngredients();
+            }
+
+            function updateCustomIngredient(id, field, value) {
+                const ing = customIngredients.find(i => i.id === id);
+                if (ing) {
+                    if (field === 'value') {
+                        ing[field] = parseFloat(value) || 0;
+                    } else {
+                        ing[field] = value;
+                    }
+                    saveIngredients();
+                }
+            }
+
+            function renderCustomIngredients() {
+                const container = document.getElementById('customIngredientsContainer');
+                container.innerHTML = '';
+
+                customIngredients.forEach(ing => {
+                    const row = document.createElement('div');
+                    row.className = 'ingredient-row';
+                    row.innerHTML = `
+                        <div class="custom-ingredient-row" style="flex: 1;">
+                            <input type="text"
+                                   class="custom-ingredient-name"
+                                   placeholder="Ingredient name"
+                                   value="${ing.name}"
+                                   data-id="${ing.id}">
+                            <select class="custom-ingredient-unit" data-id="${ing.id}">
+                                <option value="tbsp" ${ing.unit === 'tbsp' ? 'selected' : ''}>tbsp</option>
+                                <option value="g" ${ing.unit === 'g' ? 'selected' : ''}>g</option>
+                                <option value="ml" ${ing.unit === 'ml' ? 'selected' : ''}>ml</option>
+                            </select>
+                            <button class="remove-ingredient-btn" data-id="${ing.id}">×</button>
+                        </div>
+                        <div class="ingredient-controls">
+                            <button class="ingredient-btn" data-custom="${ing.id}" data-action="decrease">−</button>
+                            <span class="ingredient-value" id="custom-${ing.id}-value">${ing.value.toFixed(1)}</span>
+                            <button class="ingredient-btn" data-custom="${ing.id}" data-action="increase">+</button>
+                        </div>
+                    `;
+                    container.appendChild(row);
+
+                    // Add event listeners
+                    const nameInput = row.querySelector('.custom-ingredient-name');
+                    nameInput.addEventListener('change', (e) => {
+                        updateCustomIngredient(ing.id, 'name', e.target.value);
+                    });
+
+                    const unitSelect = row.querySelector('.custom-ingredient-unit');
+                    unitSelect.addEventListener('change', (e) => {
+                        updateCustomIngredient(ing.id, 'unit', e.target.value);
+                    });
+
+                    const removeBtn = row.querySelector('.remove-ingredient-btn');
+                    removeBtn.addEventListener('click', () => {
+                        removeCustomIngredient(ing.id);
+                    });
+                });
+            }
+
+            // Event delegation for ingredient buttons
+            document.addEventListener('click', (e) => {
+                if (e.target.classList.contains('ingredient-btn')) {
+                    const action = e.target.dataset.action;
+                    const delta = action === 'increase' ? 0.5 : -0.5;
+
+                    if (e.target.dataset.ingredient) {
+                        updateIngredient(e.target.dataset.ingredient, delta);
+                    } else if (e.target.dataset.custom) {
+                        const id = e.target.dataset.custom;
+                        const ing = customIngredients.find(i => i.id === id);
+                        if (ing) {
+                            ing.value = Math.max(0, Math.round((ing.value + delta) * 2) / 2);
+                            document.getElementById('custom-' + id + '-value').textContent = ing.value.toFixed(1);
+                            saveIngredients();
+                        }
+                    }
+                }
+            });
+
+            // Add ingredient button
+            document.getElementById('addIngredientBtn').addEventListener('click', addCustomIngredient);
+
+            // Save recipe
+            document.getElementById('saveRecipeBtn').addEventListener('click', () => {
+                const recipe = {
+                    timestamp: Date.now(),
+                    chicken: ingredients.chicken.value,
+                    ingredients: {}
+                };
+
+                // Add default ingredients
+                for (const [id, data] of Object.entries(ingredients)) {
+                    if (id !== 'chicken' && data.value > 0) {
+                        recipe.ingredients[id] = {
+                            displayName: data.displayName,
+                            value: data.value,
+                            unit: data.unit
+                        };
+                    }
+                }
+
+                // Add custom ingredients
+                customIngredients.forEach(ing => {
+                    if (ing.name && ing.value > 0) {
+                        recipe.ingredients[ing.id] = {
+                            displayName: ing.name,
+                            value: ing.value,
+                            unit: ing.unit
+                        };
+                    }
+                });
+
+                pendingRecipe = recipe;
+                showRatingModal();
+            });
+
+            // Rating modal
+            function showRatingModal() {
+                const modal = document.getElementById('ratingModal');
+                const container = document.getElementById('starsContainer');
+                container.innerHTML = '';
+
+                // Create 10 half stars (5 full stars)
+                for (let i = 0; i < 10; i++) {
+                    const star = document.createElement('span');
+                    star.className = 'star empty';
+                    star.textContent = i % 2 === 0 ? '☆' : '★';
+                    star.dataset.value = (i + 1) * 0.5;
+                    container.appendChild(star);
+                }
+
+                // Star click handler
+                let selectedRating = 0;
+                container.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('star')) {
+                        selectedRating = parseFloat(e.target.dataset.value);
+                        updateStars(selectedRating);
+                    }
+                });
+
+                function updateStars(rating) {
+                    const stars = container.querySelectorAll('.star');
+                    stars.forEach((star, index) => {
+                        if ((index + 1) * 0.5 <= rating) {
+                            star.classList.remove('empty');
+                            star.classList.add('filled');
+                        } else {
+                            star.classList.remove('filled');
+                            star.classList.add('empty');
+                        }
+                    });
+                }
+
+                // Submit rating
+                document.getElementById('submitRatingBtn').onclick = () => {
+                    if (pendingRecipe) {
+                        pendingRecipe.rating = selectedRating;
+                        saveRecipe(pendingRecipe);
+                        modal.hidden = true;
+                        pendingRecipe = null;
+                    }
+                };
+
+                // Skip rating
+                document.getElementById('skipRatingBtn').onclick = () => {
+                    if (pendingRecipe) {
+                        pendingRecipe.rating = 0;
+                        saveRecipe(pendingRecipe);
+                        modal.hidden = true;
+                        pendingRecipe = null;
+                    }
+                };
+
+                modal.hidden = false;
+            }
+
+            // Save recipe to history
+            function saveRecipe(recipe) {
+                const history = loadHistory();
+                history.push(recipe);
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+                renderHistory();
+            }
+
+            // Load history
+            function loadHistory() {
+                const data = localStorage.getItem(STORAGE_KEY);
+                return data ? JSON.parse(data) : [];
+            }
+
+            // Render history
+            function renderHistory() {
+                const history = loadHistory();
+                const tbody = document.getElementById('historyBody');
+                const emptyMsg = document.getElementById('emptyHistory');
+
+                if (history.length === 0) {
+                    tbody.innerHTML = '';
+                    emptyMsg.style.display = 'block';
+                    return;
+                }
+
+                emptyMsg.style.display = 'none';
+
+                // Sort by rating (highest first), then by date
+                history.sort((a, b) => {
+                    if (b.rating !== a.rating) {
+                        return b.rating - a.rating;
+                    }
+                    return b.timestamp - a.timestamp;
+                });
+
+                tbody.innerHTML = '';
+                history.forEach((recipe, index) => {
+                    const row = document.createElement('tr');
+
+                    // Rating
+                    const ratingCell = document.createElement('td');
+                    if (recipe.rating > 0) {
+                        const fullStars = Math.floor(recipe.rating);
+                        const hasHalf = recipe.rating % 1 !== 0;
+                        ratingCell.innerHTML = `
+                            <span class="rating-stars">${'★'.repeat(fullStars)}${hasHalf ? '½' : ''}</span>
+                            <span class="rating-number">${recipe.rating.toFixed(1)}</span>
+                        `;
+                    } else {
+                        ratingCell.innerHTML = '<span class="rating-number">Not rated</span>';
+                    }
+                    row.appendChild(ratingCell);
+
+                    // Chicken
+                    const chickenCell = document.createElement('td');
+                    chickenCell.textContent = recipe.chicken.toFixed(1);
+                    row.appendChild(chickenCell);
+
+                    // Ingredients
+                    const ingredientsCell = document.createElement('td');
+                    ingredientsCell.className = 'expandable-cell';
+                    const ingredientsList = Object.values(recipe.ingredients)
+                        .map(ing => `${ing.displayName}: ${ing.value.toFixed(1)} ${ing.unit}`)
+                        .join(', ');
+                    ingredientsCell.textContent = ingredientsList;
+                    ingredientsCell.addEventListener('click', () => {
+                        ingredientsCell.classList.toggle('expanded');
+                    });
+                    row.appendChild(ingredientsCell);
+
+                    // Date
+                    const dateCell = document.createElement('td');
+                    const date = new Date(recipe.timestamp);
+                    dateCell.textContent = date.toLocaleDateString();
+                    row.appendChild(dateCell);
+
+                    // Delete button
+                    const deleteCell = document.createElement('td');
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'delete-entry-btn';
+                    deleteBtn.textContent = 'Delete';
+                    deleteBtn.addEventListener('click', () => {
+                        if (confirm('Delete this recipe?')) {
+                            history.splice(index, 1);
+                            localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+                            renderHistory();
+                        }
+                    });
+                    deleteCell.appendChild(deleteBtn);
+                    row.appendChild(deleteCell);
+
+                    tbody.appendChild(row);
+                });
+            }
+
+            // Clear all history
+            document.getElementById('clearBtn').addEventListener('click', () => {
+                if (confirm('Clear all recipe history?')) {
+                    localStorage.removeItem(STORAGE_KEY);
+                    renderHistory();
+                }
+            });
+
+            // Initialize
+            loadIngredients();
+            initializeIngredients();
+            renderHistory();
+        })();
+    </script>
+</body>
+</html>
