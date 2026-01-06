@@ -243,30 +243,51 @@
             font-weight: 300;
         }
 
-        .stars-container {
+        .rating-controls {
             display: flex;
             justify-content: center;
+            align-items: center;
             gap: 0.5rem;
             margin-bottom: 1.5rem;
         }
 
-        .star {
-            font-size: 2.5rem;
+        .rating-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 2px solid var(--text);
+            background: transparent;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 1.5rem;
+            font-weight: 300;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             transition: all 0.2s ease;
-            user-select: none;
+            line-height: 1;
         }
 
-        .star:hover {
-            transform: scale(1.1);
+        .rating-btn:hover {
+            background: var(--text);
+            color: var(--bg);
         }
 
-        .star.filled {
-            color: #fbbf24;
+        .rating-btn:focus {
+            outline: 2px solid var(--link-underline-hover);
+            outline-offset: 3px;
         }
 
-        .star.empty {
-            color: var(--link-underline);
+        .rating-btn:focus:not(:focus-visible) {
+            outline: none;
+        }
+
+        .rating-value {
+            min-width: 60px;
+            text-align: center;
+            font-size: clamp(1.5rem, 5vw, 2rem);
+            font-variant-numeric: tabular-nums;
         }
 
         .rating-buttons {
@@ -443,7 +464,11 @@
     <div class="rating-modal" id="ratingModal" hidden>
         <div class="rating-modal-content">
             <h3>Rate this recipe</h3>
-            <div class="stars-container" id="starsContainer"></div>
+            <div class="rating-controls">
+                <button class="rating-btn" id="ratingDown">−</button>
+                <span class="rating-value" id="ratingValue">0.0</span>
+                <button class="rating-btn" id="ratingUp">+</button>
+            </div>
             <div class="rating-buttons">
                 <button class="skip-rating-btn" id="skipRatingBtn">Skip</button>
                 <button class="submit-rating-btn" id="submitRatingBtn">Save</button>
@@ -844,39 +869,27 @@
             // Rating modal
             function showRatingModal() {
                 const modal = document.getElementById('ratingModal');
-                const container = document.getElementById('starsContainer');
-                container.innerHTML = '';
+                const ratingValue = document.getElementById('ratingValue');
+                const ratingUp = document.getElementById('ratingUp');
+                const ratingDown = document.getElementById('ratingDown');
 
-                // Create 10 half stars (5 full stars)
-                for (let i = 0; i < 10; i++) {
-                    const star = document.createElement('span');
-                    star.className = 'star empty';
-                    star.textContent = i % 2 === 0 ? '☆' : '★';
-                    star.dataset.value = (i + 1) * 0.5;
-                    container.appendChild(star);
-                }
-
-                // Star click handler
                 let selectedRating = 0;
-                container.addEventListener('click', (e) => {
-                    if (e.target.classList.contains('star')) {
-                        selectedRating = parseFloat(e.target.dataset.value);
-                        updateStars(selectedRating);
-                    }
-                });
+                ratingValue.textContent = selectedRating.toFixed(1);
 
-                function updateStars(rating) {
-                    const stars = container.querySelectorAll('.star');
-                    stars.forEach((star, index) => {
-                        if ((index + 1) * 0.5 <= rating) {
-                            star.classList.remove('empty');
-                            star.classList.add('filled');
-                        } else {
-                            star.classList.remove('filled');
-                            star.classList.add('empty');
-                        }
-                    });
-                }
+                // Rating controls
+                ratingUp.onclick = () => {
+                    if (selectedRating < 5) {
+                        selectedRating = Math.round((selectedRating + 0.5) * 2) / 2;
+                        ratingValue.textContent = selectedRating.toFixed(1);
+                    }
+                };
+
+                ratingDown.onclick = () => {
+                    if (selectedRating > 0) {
+                        selectedRating = Math.round((selectedRating - 0.5) * 2) / 2;
+                        ratingValue.textContent = selectedRating.toFixed(1);
+                    }
+                };
 
                 // Submit rating
                 document.getElementById('submitRatingBtn').onclick = () => {
