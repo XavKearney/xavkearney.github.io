@@ -758,10 +758,6 @@
 				}, { passive: false });
 
 				canvas.addEventListener('click', function (e) {
-					if (state.mode === 'detail' || (state.mode === 'transitioning' && state.detailIndex >= 0)) {
-						closeDetail();
-						return;
-					}
 					if (state.mode !== 'browse') return;
 					handleClick(e.clientX, e.clientY);
 				});
