@@ -830,11 +830,14 @@
 					if (!state.dragMoved) {
 						if (Math.abs(dx) > 20 || Math.abs(dy) > 20) {
 							state.dragMoved = true;
-							// Reset drag origin so pan doesn't jump
+							// Reset origins so pan and momentum don't jump
 							state.dragStartX = t.clientX;
 							state.dragStartY = t.clientY;
 							state.dragCamStartX = state.camTargetX;
 							state.dragCamStartY = state.camTargetY;
+							state.lastDragX = t.clientX;
+							state.lastDragY = t.clientY;
+							state.lastDragTime = performance.now();
 						}
 						return; // don't pan yet
 					}
