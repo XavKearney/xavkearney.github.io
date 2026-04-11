@@ -1,1 +1,3 @@
 .DS_Store
+scripts/.geocode-cache.json
+scripts/.tmp/

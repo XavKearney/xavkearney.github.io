@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>Photography — Xav Kearney</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+	<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+	<link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
+	<link rel="manifest" href="../site.webmanifest">
+	<link rel="mask-icon" href="../safari-pinned-tab.svg" color="#5bbad5">
+	<meta name="msapplication-TileColor" content="#da532c">
+	<meta name="theme-color" content="#1a1a1a">
+	<meta name="author" content="Xav Kearney">
+	<meta name="description" content="Photography by Xav Kearney">
+	<meta property="og:title" content="Photography — Xav Kearney">
+	<meta property="og:description" content="Photography by Xav Kearney">
+	<meta property="og:type" content="website">
+	<meta property="og:url" content="https://xav.ai/photography/">
+	<meta name="twitter:card" content="summary">
+	<link rel="canonical" href="https://xav.ai/photography/">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link rel="preload" href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300&display=swap" as="style">
+	<link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="../css/shared.css">
+	<style>
+		body {
+			padding: 0;
+			overflow: hidden;
+			align-items: stretch;
+		}
+
+		main {
+			max-width: none;
+			width: 100%;
+			height: 100vh;
+			height: 100dvh;
+			position: relative;
+		}
+
+		#gallery-canvas {
+			width: 100%;
+			height: 100%;
+			display: block;
+			touch-action: none;
+			cursor: default;
+		}
+
+		/* Detail overlay */
+		.photo-detail {
+			position: fixed;
+			inset: 0;
+			z-index: 50;
+			display: flex;
+			align-items: flex-end;
+			justify-content: center;
+			pointer-events: none;
+			opacity: 0;
+			transition: opacity 0.4s ease;
+		}
+
+		.photo-detail.active {
+			pointer-events: auto;
+			opacity: 1;
+		}
+
+		.photo-detail .close-btn {
+			position: fixed;
+			top: 1rem;
+			right: 4.5rem;
+			z-index: 51;
+			background: none;
+			border: none;
+			color: var(--text-muted);
+			font-size: 1.8rem;
+			cursor: pointer;
+			padding: 0.25rem 0.5rem;
+			line-height: 1;
+			transition: color 0.2s ease;
+			font-family: 'Source Sans Pro', sans-serif;
+			font-weight: 300;
+		}
+
+		.photo-detail .close-btn:hover {
+			color: var(--text);
+		}
+
+		.photo-detail .info {
+			padding: 1.5rem;
+			text-align: center;
+			pointer-events: none;
+		}
+
+		.photo-detail .location {
+			font-size: clamp(0.95rem, 2.5vw, 1.15rem);
+			color: var(--text);
+			margin: 0;
+			font-weight: 300;
+			letter-spacing: 0.02em;
+		}
+
+		/* Nav arrows */
+		.photo-detail .nav-arrow {
+			position: fixed;
+			top: 50%;
+			transform: translateY(-50%);
+			z-index: 51;
+			background: none;
+			border: none;
+			color: var(--text-muted);
+			font-size: 2rem;
+			cursor: pointer;
+			padding: 1rem;
+			transition: color 0.2s ease;
+			font-family: 'Source Sans Pro', sans-serif;
+			font-weight: 300;
+		}
+
+		.photo-detail .nav-arrow:hover {
+			color: var(--text);
+		}
+
+		.photo-detail .nav-prev { left: 0.5rem; }
+		.photo-detail .nav-next { right: 0.5rem; }
+
+		@media (max-width: 768px) {
+			.photo-detail .nav-arrow { display: none; }
+		}
+
+		/* Loading */
+		.loading-overlay {
+			position: fixed;
+			inset: 0;
+			z-index: 100;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			background: var(--bg);
+			transition: opacity 0.5s ease;
+		}
+
+		.loading-overlay.hidden {
+			opacity: 0;
+			pointer-events: none;
+		}
+
+		.loading-spinner {
+			width: 30px;
+			height: 30px;
+			border: 2px solid var(--text-muted);
+			border-top-color: transparent;
+			border-radius: 50%;
+			animation: spin 0.8s linear infinite;
+		}
+
+		@keyframes spin {
+			to { transform: rotate(360deg); }
+		}
+
+		/* CSS Fallback */
+		.fallback-gallery {
+			display: none;
+			padding: 0.5rem;
+			column-count: 2;
+			column-gap: 0.5rem;
+		}
+
+		@media (min-width: 768px) {
+			.fallback-gallery { column-count: 3; }
+		}
+
+		.no-webgl .fallback-gallery { display: block; }
+		.no-webgl #gallery-canvas { display: none; }
+		.no-webgl body { overflow: auto; }
+
+		.fallback-gallery .photo-card {
+			break-inside: avoid;
+			margin-bottom: 0.5rem;
+			cursor: pointer;
+			position: relative;
+			overflow: hidden;
+		}
+
+		.fallback-gallery .photo-card img {
+			width: 100%;
+			display: block;
+			border-radius: 2px;
+		}
+
+		.fallback-gallery .photo-card .caption {
+			position: absolute;
+			bottom: 0;
+			left: 0;
+			right: 0;
+			padding: 2rem 0.5rem 0.5rem;
+			background: linear-gradient(transparent, rgba(0,0,0,0.6));
+			color: #eee;
+			font-size: 0.8rem;
+			opacity: 0;
+			transition: opacity 0.2s ease;
+		}
+
+		.fallback-gallery .photo-card:hover .caption {
+			opacity: 1;
+		}
+
+		.fallback-lightbox {
+			position: fixed;
+			inset: 0;
+			z-index: 200;
+			background: rgba(0,0,0,0.95);
+			display: none;
+			align-items: center;
+			justify-content: center;
+			flex-direction: column;
+			cursor: pointer;
+		}
+
+		.fallback-lightbox.active { display: flex; }
+
+		.fallback-lightbox img {
+			max-width: 95vw;
+			max-height: 85vh;
+			object-fit: contain;
+		}
+
+		.fallback-lightbox .lb-location {
+			color: #ccc;
+			font-size: 0.95rem;
+			margin-top: 1rem;
+		}
+
+		@media (prefers-reduced-motion: reduce) {
+			.loading-spinner { animation: none; border-top-color: var(--text-muted); }
+		}
+	</style>
+</head>
+
+<body>
+
+	<div class="loading-overlay" id="loadingOverlay">
+		<div class="loading-spinner"></div>
+	</div>
+
+	<!-- Google Analytics (GA4) -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=G-CF2279ZMGC"></script>
+	<script>
+		window.dataLayer = window.dataLayer || [];
+		function gtag() { dataLayer.push(arguments); }
+		gtag('js', new Date());
+		gtag('config', 'G-CF2279ZMGC');
+	</script>
+
+	<main>
+		<canvas id="gallery-canvas"></canvas>
+
+		<div class="photo-detail" id="photoDetail" role="dialog" aria-label="Photo detail view">
+			<button class="close-btn" aria-label="Close">&times;</button>
+			<button class="nav-arrow nav-prev" aria-label="Previous photo">&lsaquo;</button>
+			<button class="nav-arrow nav-next" aria-label="Next photo">&rsaquo;</button>
+			<div class="info">
+				<p class="location" id="detailLocation"></p>
+			</div>
+		</div>
+
+		<div class="fallback-gallery" id="fallbackGallery" role="list"></div>
+		<div class="fallback-lightbox" id="fallbackLightbox">
+			<img id="lbImage" src="" alt="">
+			<p class="lb-location" id="lbLocation"></p>
+		</div>
+	</main>
+
+	<script>document.documentElement.setAttribute('data-theme', 'dark');</script>
+
+	<!-- Photo manifest -->
+	<script src="photos.js"></script>
+
+	<!-- Gallery -->
+	<script>
+		(function () {
+			'use strict';
+
+			function hasWebGL() {
+				try {
+					var c = document.createElement('canvas');
+					return !!(c.getContext('webgl2') || c.getContext('webgl'));
+				} catch (e) { return false; }
+			}
+
+			var photos = typeof PHOTO_MANIFEST !== 'undefined' ? PHOTO_MANIFEST : [];
+			var loadingOverlay = document.getElementById('loadingOverlay');
+			var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+			if (!hasWebGL() || photos.length === 0) {
+				document.documentElement.classList.add('no-webgl');
+				initFallback();
+				loadingOverlay.classList.add('hidden');
+				return;
+			}
+
+			var script = document.createElement('script');
+			script.src = 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js';
+			script.onload = initGallery;
+			script.onerror = function () {
+				document.documentElement.classList.add('no-webgl');
+				initFallback();
+				loadingOverlay.classList.add('hidden');
+			};
+			document.head.appendChild(script);
+
+			// ─── Fallback Gallery ───
+			function initFallback() {
+				var container = document.getElementById('fallbackGallery');
+				var lightbox = document.getElementById('fallbackLightbox');
+				var lbImage = document.getElementById('lbImage');
+				var lbLocation = document.getElementById('lbLocation');
+
+				photos.forEach(function (photo) {
+					var card = document.createElement('div');
+					card.className = 'photo-card';
+					card.setAttribute('role', 'listitem');
+					var img = document.createElement('img');
+					img.src = photo.thumb;
+					img.alt = photo.location || 'Photograph';
+					img.loading = 'lazy';
+					img.style.aspectRatio = photo.aspect;
+					img.style.backgroundColor = '#222';
+					card.appendChild(img);
+					if (photo.location) {
+						var caption = document.createElement('div');
+						caption.className = 'caption';
+						caption.textContent = photo.location;
+						card.appendChild(caption);
+					}
+					card.addEventListener('click', function () {
+						lbImage.src = photo.full;
+						lbImage.alt = photo.location || 'Photograph';
+						lbLocation.textContent = photo.location || '';
+						lightbox.classList.add('active');
+					});
+					container.appendChild(card);
+				});
+
+				lightbox.addEventListener('click', function () {
+					lightbox.classList.remove('active');
+					lbImage.src = '';
+				});
+				document.addEventListener('keydown', function (e) {
+					if (e.key === 'Escape' && lightbox.classList.contains('active')) {
+						lightbox.classList.remove('active');
+						lbImage.src = '';
+					}
+				});
+			}
+
+			// ─── Three.js Infinite Canvas Gallery ───
+			function initGallery() {
+				var scene = new THREE.Scene();
+				var canvas = document.getElementById('gallery-canvas');
+				var detail = document.getElementById('photoDetail');
+				var detailLocation = document.getElementById('detailLocation');
+				var closeBtn = detail.querySelector('.close-btn');
+				var prevBtn = detail.querySelector('.nav-prev');
+				var nextBtn = detail.querySelector('.nav-next');
+
+				scene.background = new THREE.Color(0x1a1a1a);
+
+				var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+				var dpr = Math.min(window.devicePixelRatio || 1, 2);
+				renderer.setPixelRatio(dpr);
+				renderer.setSize(window.innerWidth, window.innerHeight);
+
+				var isMobile = window.innerWidth <= 768;
+				var camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
+				camera.position.set(0, 0, isMobile ? 3.5 : 5);
+
+				// ─── State ───
+				var state = {
+					mode: 'browse',
+					camX: 0, camY: 0, camZ: isMobile ? 3.5 : 5,
+					camTargetX: 0, camTargetY: 0,
+					// Mouse-edge panning velocity
+					panVelX: 0, panVelY: 0,
+					mouseInCanvas: false,
+					// Pinch zoom
+					pinchStartDist: 0, pinchStartZ: 0,
+					// Touch drag
+					dragging: false,
+					dragStartX: 0, dragStartY: 0,
+					dragCamStartX: 0, dragCamStartY: 0,
+					dragMoved: false,
+					momentumX: 0, momentumY: 0,
+					lastDragX: 0, lastDragY: 0,
+					lastDragTime: 0,
+					// Grid bounds
+					boundsMinX: 0, boundsMaxX: 0,
+					boundsMinY: 0, boundsMaxY: 0,
+					// Hover
+					hovered: null,
+					// Detail
+					detailIndex: -1,
+					detailCamTarget: new THREE.Vector3(),
+					browseCamTarget: new THREE.Vector3(),
+					// Touch detail swipe
+					touchStartX: 0, touchDeltaX: 0, isSwiping: false,
+				};
+
+				// ─── Shader ───
+				var vertexShader = [
+					'varying vec2 vUv;',
+					'void main() {',
+					'  vUv = uv;',
+					'  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);',
+					'}'
+				].join('\n');
+
+				var fragmentShader = [
+					'uniform sampler2D uTexture;',
+					'uniform sampler2D uBlurTexture;',
+					'uniform float uMix;',
+					'uniform float uBrightness;',
+					'uniform float uOpacity;',
+					'varying vec2 vUv;',
+					'void main() {',
+					'  vec4 blur = texture2D(uBlurTexture, vUv);',
+					'  vec4 sharp = texture2D(uTexture, vUv);',
+					'  vec4 color = mix(blur, sharp, uMix);',
+					'  // Subtle vignette',
+					'  vec2 vig = vUv - 0.5;',
+					'  color.rgb *= 1.0 - dot(vig, vig) * 0.5;',
+					'  color.rgb *= uBrightness;',
+					'  color.a *= uOpacity;',
+					'  gl_FragColor = color;',
+					'}'
+				].join('\n');
+
+				// ─── Layout: wide masonry grid ───
+				var meshes = [];
+				var photoData = [];
+
+				function seededRandom(seed) {
+					var x = Math.sin(seed * 9301 + 49297) * 49573;
+					return x - Math.floor(x);
+				}
+
+				function computeLayout() {
+					var vFov = camera.fov * Math.PI / 180;
+					var frustumHeight = 2 * Math.tan(vFov / 2) * state.camZ;
+					var frustumWidth = frustumHeight * camera.aspect;
+
+					// Target: a wide grid that extends beyond viewport in both directions
+					// Use ~10 columns so there's plenty to explore horizontally
+					var cols = isMobile ? 5 : 10;
+					var photoWidth = frustumWidth * 0.28; // each photo ~28% of viewport width
+					var gap = photoWidth * 0.06;
+
+					var colHeights = new Array(cols).fill(0);
+					var gridWidth = cols * (photoWidth + gap) - gap;
+
+					for (var i = 0; i < photos.length; i++) {
+						var photo = photos[i];
+						var aspect = photo.aspect || (photo.w / photo.h);
+						var h = photoWidth / aspect;
+
+						// Place in shortest column
+						var minCol = 0;
+						for (var c = 1; c < cols; c++) {
+							if (colHeights[c] < colHeights[minCol]) minCol = c;
+						}
+
+						var x = -gridWidth / 2 + minCol * (photoWidth + gap) + photoWidth / 2;
+						var y = -(colHeights[minCol] + h / 2);
+						var z = reducedMotion ? 0 : seededRandom(i + 42) * 0.08;
+						var rot = reducedMotion ? 0 : (seededRandom(i + 99) - 0.5) * 0.02;
+
+						photoData[i] = { x: x, y: y, z: z, rot: rot, w: photoWidth, h: h };
+						colHeights[minCol] += h + gap;
+					}
+
+					// Compute grid bounds for camera clamping
+					var maxColH = 0;
+					for (var c = 0; c < cols; c++) {
+						if (colHeights[c] > maxColH) maxColH = colHeights[c];
+					}
+
+					var padX = frustumWidth * 0.3;
+					var padY = frustumHeight * 0.3;
+					state.boundsMinX = -gridWidth / 2 + frustumWidth / 2 - padX;
+					state.boundsMaxX = gridWidth / 2 - frustumWidth / 2 + padX;
+					state.boundsMinY = -(maxColH - frustumHeight / 2 + padY);
+					state.boundsMaxY = frustumHeight / 2 - padY;
+
+					// Start camera centred on the grid
+					state.camX = 0;
+					state.camY = -maxColH / 2 + frustumHeight / 4;
+					state.camTargetX = state.camX;
+					state.camTargetY = state.camY;
+				}
+
+				function createBlurTexture(dataUrl) {
+					var img = new Image();
+					img.src = dataUrl;
+					var tex = new THREE.Texture(img);
+					img.onload = function () { tex.needsUpdate = true; };
+					tex.generateMipmaps = false;
+					tex.minFilter = THREE.LinearFilter;
+					tex.magFilter = THREE.LinearFilter;
+					return tex;
+				}
+
+				function createMeshes() {
+					for (var i = 0; i < photos.length; i++) {
+						var d = photoData[i];
+						var blurTex = createBlurTexture(photos[i].blur);
+						var material = new THREE.ShaderMaterial({
+							uniforms: {
+								uTexture: { value: blurTex },
+								uBlurTexture: { value: blurTex },
+								uMix: { value: 0.0 },
+								uBrightness: { value: 1.0 },
+								uOpacity: { value: 1.0 }
+							},
+							vertexShader: vertexShader,
+							fragmentShader: fragmentShader,
+							transparent: true
+						});
+						var geometry = new THREE.PlaneGeometry(d.w, d.h);
+						var mesh = new THREE.Mesh(geometry, material);
+						mesh.position.set(d.x, d.y, d.z);
+						mesh.rotation.z = d.rot;
+						mesh.userData = {
+							index: i,
+							baseZ: d.z,
+							currentZ: d.z, targetZ: d.z,
+							currentScale: 1, targetScale: 1,
+							currentBrightness: 1, targetBrightness: 1,
+							currentOpacity: 1, targetOpacity: 1,
+							loaded: false
+						};
+						scene.add(mesh);
+						meshes.push(mesh);
+					}
+				}
+
+				computeLayout();
+				createMeshes();
+
+				// ─── Texture Manager (thumb for grid, full for detail) ───
+				var texManager = {
+					loading: new Set(),
+					thumbs: new Map(),
+					fulls: new Map(),
+					maxConcurrent: isMobile ? 2 : 4,
+					thumbBudget: isMobile ? 25 : 50,
+					queue: [],
+
+					loadThumb: function (index) {
+						if (this.thumbs.has(index) || this.loading.has('t' + index)) return;
+						this.queue.push({ idx: index, type: 'thumb' });
+						this.flush();
+					},
+
+					loadFull: function (index) {
+						if (this.fulls.has(index) || this.loading.has('f' + index)) return;
+						// Full loads get priority — insert at front
+						this.queue.unshift({ idx: index, type: 'full' });
+						this.flush();
+					},
+
+					flush: function () {
+						var self = this;
+						while (this.queue.length > 0 && this.loading.size < this.maxConcurrent) {
+							var item = this.queue.shift();
+							var key = (item.type === 'thumb' ? 't' : 'f') + item.idx;
+							if (this.loading.has(key)) continue;
+							if (item.type === 'thumb' && this.thumbs.has(item.idx)) continue;
+							if (item.type === 'full' && this.fulls.has(item.idx)) continue;
+							this.loading.add(key);
+							(function (item, key) {
+								var img = new Image();
+								img.onload = function () {
+									var texture = new THREE.Texture(img);
+									texture.needsUpdate = true;
+									texture.generateMipmaps = false;
+									texture.minFilter = THREE.LinearFilter;
+									texture.magFilter = THREE.LinearFilter;
+									var mesh = meshes[item.idx];
+									if (item.type === 'thumb') {
+										self.thumbs.set(item.idx, texture);
+										// Only apply if full isn't already loaded
+										if (!self.fulls.has(item.idx)) {
+											mesh.material.uniforms.uTexture.value = texture;
+											mesh.material.uniforms.uMix.value = 0;
+											mesh.userData.loaded = true;
+										}
+									} else {
+										self.fulls.set(item.idx, texture);
+										mesh.material.uniforms.uTexture.value = texture;
+										mesh.material.uniforms.uMix.value = 0;
+										mesh.userData.loaded = true;
+									}
+									self.loading.delete(key);
+									self.flush();
+								};
+								img.onerror = function () {
+									self.loading.delete(key);
+									self.flush();
+								};
+								img.src = item.type === 'thumb' ? photos[item.idx].thumb : photos[item.idx].full;
+							})(item, key);
+						}
+					},
+
+					disposeFull: function (index) {
+						if (this.fulls.has(index)) {
+							this.fulls.get(index).dispose();
+							this.fulls.delete(index);
+							// Revert to thumb
+							var mesh = meshes[index];
+							if (this.thumbs.has(index)) {
+								mesh.material.uniforms.uTexture.value = this.thumbs.get(index);
+							}
+						}
+					},
+
+					update: function (camX, camY, vw, vh) {
+						var loadR = Math.max(vw, vh) * 1.5;
+						var disposeR = Math.max(vw, vh) * 3;
+
+						for (var i = 0; i < photos.length; i++) {
+							var d = photoData[i];
+							var dx = d.x - camX, dy = d.y - camY;
+							var dist = Math.sqrt(dx * dx + dy * dy);
+							if (dist < loadR) {
+								this.loadThumb(i);
+							} else if (dist > disposeR && this.thumbs.has(i)) {
+								this.thumbs.get(i).dispose();
+								this.thumbs.delete(i);
+								if (!this.fulls.has(i)) {
+									meshes[i].material.uniforms.uTexture.value = meshes[i].material.uniforms.uBlurTexture.value;
+									meshes[i].material.uniforms.uMix.value = 0;
+									meshes[i].userData.loaded = false;
+								}
+							}
+						}
+
+						// Enforce thumb budget
+						if (this.thumbs.size > this.thumbBudget) {
+							var entries = [];
+							var self = this;
+							this.thumbs.forEach(function (tex, idx) {
+								var d = photoData[idx];
+								var dx = d.x - camX, dy = d.y - camY;
+								entries.push({ idx: idx, dist: dx * dx + dy * dy, tex: tex });
+							});
+							entries.sort(function (a, b) { return b.dist - a.dist; });
+							while (entries.length > self.thumbBudget) {
+								var e = entries.shift();
+								e.tex.dispose();
+								self.thumbs.delete(e.idx);
+								if (!self.fulls.has(e.idx)) {
+									meshes[e.idx].material.uniforms.uTexture.value = meshes[e.idx].material.uniforms.uBlurTexture.value;
+									meshes[e.idx].material.uniforms.uMix.value = 0;
+									meshes[e.idx].userData.loaded = false;
+								}
+							}
+						}
+					}
+				};
+
+				// ─── Raycaster (throttled) ───
+				var raycaster = new THREE.Raycaster();
+				var mouse = new THREE.Vector2();
+				var pendingRaycast = false;
+				var lastMouseX = 0, lastMouseY = 0;
+
+				function doRaycast() {
+					raycaster.setFromCamera(mouse, camera);
+					var intersects = raycaster.intersectObjects(meshes);
+					var newHovered = intersects.length > 0 ? intersects[0].object.userData.index : null;
+					if (newHovered !== state.hovered) {
+						state.hovered = newHovered;
+						canvas.style.cursor = newHovered !== null ? 'pointer' : 'default';
+					}
+					pendingRaycast = false;
+				}
+
+				function scheduleRaycast(mx, my) {
+					mouse.x = mx;
+					mouse.y = my;
+					if (!pendingRaycast) {
+						pendingRaycast = true;
+						// Defer to next rAF — batches with rendering
+						requestAnimationFrame(doRaycast);
+					}
+				}
+
+				// ─── Helpers ───
+				function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+
+				function worldUnitsPerPixel() {
+					var vFov = camera.fov * Math.PI / 180;
+					var h = 2 * Math.tan(vFov / 2) * camera.position.z;
+					return h / window.innerHeight;
+				}
+
+				// ─── Input: Desktop — mouse position drives panning ───
+				var PAN_DEAD_ZONE = 0.35; // ±35% from centre = 70% safe zone
+				var PAN_SPEED = 4.0; // world units per second at edge
+
+				canvas.addEventListener('mouseenter', function () {
+					state.mouseInCanvas = true;
+				});
+				canvas.addEventListener('mouseleave', function () {
+					state.mouseInCanvas = false;
+					state.panVelX = 0;
+					state.panVelY = 0;
+					state.hovered = null;
+					canvas.style.cursor = 'default';
+				});
+
+				canvas.addEventListener('mousemove', function (e) {
+					if (state.mode !== 'browse') return;
+
+					// Normalise mouse position to [-1, 1]
+					var mx = (e.clientX / window.innerWidth) * 2 - 1;
+					var my = (e.clientY / window.innerHeight) * 2 - 1;
+
+					// Edge panning: outside dead zone, velocity scales linearly
+					if (Math.abs(mx) > PAN_DEAD_ZONE) {
+						var strength = (Math.abs(mx) - PAN_DEAD_ZONE) / (1 - PAN_DEAD_ZONE);
+						state.panVelX = Math.sign(mx) * strength * PAN_SPEED;
+					} else {
+						state.panVelX = 0;
+					}
+					if (Math.abs(my) > PAN_DEAD_ZONE) {
+						var strength = (Math.abs(my) - PAN_DEAD_ZONE) / (1 - PAN_DEAD_ZONE);
+						state.panVelY = -Math.sign(my) * strength * PAN_SPEED;
+					} else {
+						state.panVelY = 0;
+					}
+
+					// Hover detection (throttled — deferred to rAF)
+					scheduleRaycast(
+						(e.clientX / window.innerWidth) * 2 - 1,
+						-(e.clientY / window.innerHeight) * 2 + 1
+					);
+				});
+
+				// Mouse wheel zoom
+				canvas.addEventListener('wheel', function (e) {
+					if (state.mode !== 'browse') return;
+					e.preventDefault();
+					state.camZ = clamp(state.camZ + e.deltaY * 0.003, 2, 8);
+				}, { passive: false });
+
+				canvas.addEventListener('click', function (e) {
+					if (state.mode === 'detail' || (state.mode === 'transitioning' && state.detailIndex >= 0)) {
+						closeDetail();
+						return;
+					}
+					if (state.mode !== 'browse') return;
+					handleClick(e.clientX, e.clientY);
+				});
+
+				// ─── Input: Touch ───
+				function pinchDist(e) {
+					var dx = e.touches[0].clientX - e.touches[1].clientX;
+					var dy = e.touches[0].clientY - e.touches[1].clientY;
+					return Math.sqrt(dx * dx + dy * dy);
+				}
+
+				canvas.addEventListener('touchstart', function (e) {
+					if (state.mode === 'detail') {
+						state.touchStartX = e.touches[0].clientX;
+						state.touchDeltaX = 0;
+						state.isSwiping = false;
+						return;
+					}
+					if (state.mode !== 'browse') return;
+
+					if (e.touches.length === 2) {
+						// Pinch start
+						state.pinchStartDist = pinchDist(e);
+						state.pinchStartZ = state.camZ;
+						state.dragging = false;
+						return;
+					}
+
+					var t = e.touches[0];
+					state.dragging = true;
+					state.dragMoved = false;
+					state.dragStartX = t.clientX;
+					state.dragStartY = t.clientY;
+					state.dragCamStartX = state.camTargetX;
+					state.dragCamStartY = state.camTargetY;
+					state.momentumX = 0;
+					state.momentumY = 0;
+					state.lastDragX = t.clientX;
+					state.lastDragY = t.clientY;
+					state.lastDragTime = performance.now();
+				}, { passive: true });
+
+				canvas.addEventListener('touchmove', function (e) {
+					if (state.mode === 'detail') {
+						e.preventDefault();
+						state.touchDeltaX = e.touches[0].clientX - state.touchStartX;
+						if (Math.abs(state.touchDeltaX) > 15) state.isSwiping = true;
+						return;
+					}
+
+					// Pinch zoom
+					if (e.touches.length === 2 && state.mode === 'browse') {
+						e.preventDefault();
+						var dist = pinchDist(e);
+						var scale = state.pinchStartDist / dist; // pinch in = zoom out (larger z)
+						state.camZ = clamp(state.pinchStartZ * scale, 2, 8);
+						return;
+					}
+
+					if (!state.dragging) return;
+					e.preventDefault();
+					var t = e.touches[0];
+					var dx = t.clientX - state.dragStartX;
+					var dy = t.clientY - state.dragStartY;
+					if (Math.abs(dx) > 3 || Math.abs(dy) > 3) state.dragMoved = true;
+
+					var scale = worldUnitsPerPixel();
+					state.camTargetX = state.dragCamStartX - dx * scale;
+					state.camTargetY = state.dragCamStartY + dy * scale;
+					state.camTargetX = clamp(state.camTargetX, state.boundsMinX, state.boundsMaxX);
+					state.camTargetY = clamp(state.camTargetY, state.boundsMinY, state.boundsMaxY);
+
+					var now = performance.now();
+					var dt = now - state.lastDragTime;
+					if (dt > 0) {
+						state.momentumX = -(t.clientX - state.lastDragX) * scale / (dt / 1000);
+						state.momentumY = (t.clientY - state.lastDragY) * scale / (dt / 1000);
+					}
+					state.lastDragX = t.clientX;
+					state.lastDragY = t.clientY;
+					state.lastDragTime = now;
+				}, { passive: false });
+
+				canvas.addEventListener('touchend', function (e) {
+					if (state.mode === 'detail' || (state.mode === 'transitioning' && state.detailIndex >= 0)) {
+						if (state.isSwiping) {
+							if (state.touchDeltaX < -50) navigateDetail(1);
+							else if (state.touchDeltaX > 50) navigateDetail(-1);
+						} else {
+							closeDetail();
+						}
+						return;
+					}
+					if (!state.dragging) return;
+					state.dragging = false;
+
+					if (!state.dragMoved && e.changedTouches.length > 0) {
+						var t = e.changedTouches[0];
+						handleClick(t.clientX, t.clientY);
+					}
+				}, { passive: true });
+
+				// ─── Click/Tap handler ───
+				function handleClick(clientX, clientY) {
+					mouse.x = (clientX / window.innerWidth) * 2 - 1;
+					mouse.y = -(clientY / window.innerHeight) * 2 + 1;
+					raycaster.setFromCamera(mouse, camera);
+					var intersects = raycaster.intersectObjects(meshes);
+					if (intersects.length > 0) {
+						openDetail(intersects[0].object.userData.index);
+					}
+				}
+
+				// ─── Detail View ───
+				var detailTimer = null;
+
+				function openDetail(index) {
+					var isNav = detail.classList.contains('active'); // already in detail
+					state.detailIndex = index;
+
+					if (!isNav) {
+						state.mode = 'transitioning';
+						state.browseCamTarget.set(state.camTargetX, state.camTargetY, state.camZ);
+					}
+					// During nav, stay in 'detail' mode so keys keep working
+
+					var d = photoData[index];
+					var photo = photos[index];
+
+					var vFov = camera.fov * Math.PI / 180;
+					var zForW = (d.w / 0.85) / (2 * Math.tan(vFov / 2) * camera.aspect);
+					var zForH = (d.h / 0.85) / (2 * Math.tan(vFov / 2));
+					var targetZ = Math.max(zForW, zForH) + d.z;
+					state.detailCamTarget.set(d.x, d.y, targetZ);
+
+					for (var i = 0; i < meshes.length; i++) {
+						meshes[i].userData.targetOpacity = (i === index) ? 1 : 0.15;
+					}
+
+					detailLocation.textContent = photo.location || '';
+					detail.classList.add('active');
+
+					texManager.loadFull(index);
+
+					// Animate camera with easing
+					animateCameraTo(d.x, d.y, targetZ, isNav ? 350 : 500);
+
+					if (!isNav) {
+						if (detailTimer) clearTimeout(detailTimer);
+						detailTimer = setTimeout(function () { state.mode = 'detail'; }, 500);
+					}
+				}
+
+				function closeDetail() {
+					if (state.mode !== 'detail' && state.mode !== 'transitioning') return;
+					state.mode = 'transitioning';
+					detail.classList.remove('active');
+
+					for (var i = 0; i < meshes.length; i++) {
+						meshes[i].userData.targetOpacity = 1;
+					}
+
+					texManager.disposeFull(state.detailIndex);
+					state.camTargetX = state.browseCamTarget.x;
+					state.camTargetY = state.browseCamTarget.y;
+					state.detailIndex = -1;
+
+					animateCameraTo(state.browseCamTarget.x, state.browseCamTarget.y, state.browseCamTarget.z, 500);
+
+					if (detailTimer) clearTimeout(detailTimer);
+					detailTimer = setTimeout(function () { state.mode = 'browse'; }, 500);
+				}
+
+				function findAdjacentPhoto(currentIdx, direction) {
+					var cur = photoData[currentIdx];
+					var bestIdx = -1;
+					var bestScore = Infinity;
+
+					for (var i = 0; i < photos.length; i++) {
+						if (i === currentIdx) continue;
+						var d = photoData[i];
+						var dx = d.x - cur.x;
+						var dy = d.y - cur.y;
+
+						if (direction < 0 && dx > -0.1) continue;
+						if (direction > 0 && dx < 0.1) continue;
+
+						var score = Math.abs(dx) + Math.abs(dy) * 2;
+						if (score < bestScore) { bestScore = score; bestIdx = i; }
+					}
+
+					if (bestIdx === -1) {
+						for (var i = 0; i < photos.length; i++) {
+							if (i === currentIdx) continue;
+							var d = photoData[i];
+							var dy = d.y - cur.y;
+							if (direction > 0 && dy < -0.1) {
+								var score = Math.abs(dy) + Math.abs(d.x - cur.x);
+								if (score < bestScore) { bestScore = score; bestIdx = i; }
+							} else if (direction < 0 && dy > 0.1) {
+								var score = Math.abs(dy) + Math.abs(d.x - cur.x);
+								if (score < bestScore) { bestScore = score; bestIdx = i; }
+							}
+						}
+					}
+					return bestIdx;
+				}
+
+				function navigateDetail(direction) {
+					var newIndex = findAdjacentPhoto(state.detailIndex, direction);
+					if (newIndex < 0) return;
+					meshes[state.detailIndex].userData.targetOpacity = 0.15;
+					openDetail(newIndex);
+				}
+
+				closeBtn.addEventListener('click', function (e) { e.stopPropagation(); closeDetail(); });
+				prevBtn.addEventListener('click', function (e) { e.stopPropagation(); navigateDetail(-1); });
+				nextBtn.addEventListener('click', function (e) { e.stopPropagation(); navigateDetail(1); });
+				// Click anywhere on overlay (not buttons) = close
+				detail.addEventListener('click', closeDetail);
+
+				document.addEventListener('keydown', function (e) {
+					if (state.mode === 'detail' || state.mode === 'transitioning') {
+						if (e.key === 'Escape') closeDetail();
+						else if (e.key === 'ArrowLeft') { e.preventDefault(); navigateDetail(-1); }
+						else if (e.key === 'ArrowRight') { e.preventDefault(); navigateDetail(1); }
+					}
+				});
+
+				// ─── Resize ───
+				var resizeTimer;
+				window.addEventListener('resize', function () {
+					clearTimeout(resizeTimer);
+					resizeTimer = setTimeout(function () {
+						isMobile = window.innerWidth <= 768;
+						camera.aspect = window.innerWidth / window.innerHeight;
+						camera.updateProjectionMatrix();
+						renderer.setSize(window.innerWidth, window.innerHeight);
+
+						computeLayout();
+						for (var i = 0; i < meshes.length; i++) {
+							var d = photoData[i];
+							meshes[i].position.set(d.x, d.y, d.z);
+							meshes[i].geometry.dispose();
+							meshes[i].geometry = new THREE.PlaneGeometry(d.w, d.h);
+						}
+					}, 200);
+				});
+
+				// ─── Animation ───
+				var clock = new THREE.Clock();
+				var frameCount = 0;
+				var EPS = 0.001;
+
+				function lerp(a, b, t) { return a + (b - a) * t; }
+
+				function easeInOutCubic(t) {
+					return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+				}
+
+				// Fixed-duration eased transitions for camera + opacity
+				var camAnim = {
+					active: false,
+					startTime: 0,
+					duration: 450,
+					progress: 0, // 0–1 eased progress, shared with opacity
+					fromX: 0, fromY: 0, fromZ: 0,
+					toX: 0, toY: 0, toZ: 0,
+					// Snapshot of each mesh's opacity at animation start
+					opacityFrom: []
+				};
+
+				function animateCameraTo(x, y, z, duration) {
+					camAnim.active = true;
+					camAnim.startTime = performance.now();
+					camAnim.duration = duration || 450;
+					camAnim.progress = 0;
+					camAnim.fromX = camera.position.x;
+					camAnim.fromY = camera.position.y;
+					camAnim.fromZ = camera.position.z;
+					camAnim.toX = x;
+					camAnim.toY = y;
+					camAnim.toZ = z;
+					// Snapshot current opacities so we can interpolate from them
+					camAnim.opacityFrom = [];
+					for (var i = 0; i < meshes.length; i++) {
+						camAnim.opacityFrom[i] = meshes[i].userData.currentOpacity;
+					}
+				}
+
+				function animate() {
+					requestAnimationFrame(animate);
+					var delta = Math.min(clock.getDelta(), 0.05);
+					var t = reducedMotion ? 1 : 1 - Math.pow(0.0001, delta);
+					var tFast = reducedMotion ? 1 : 1 - Math.pow(0.00001, delta);
+					frameCount++;
+
+					// ── Camera ──
+					if (state.mode === 'browse') {
+						if (!isMobile && state.mouseInCanvas && !state.dragging) {
+							state.camTargetX += state.panVelX * delta;
+							state.camTargetY += state.panVelY * delta;
+						}
+
+						if (!state.dragging && (Math.abs(state.momentumX) > 0.01 || Math.abs(state.momentumY) > 0.01)) {
+							state.camTargetX += state.momentumX * delta;
+							state.camTargetY += state.momentumY * delta;
+							var decay = Math.pow(0.92, delta * 60);
+							state.momentumX *= decay;
+							state.momentumY *= decay;
+							if (Math.abs(state.momentumX) < 0.01) state.momentumX = 0;
+							if (Math.abs(state.momentumY) < 0.01) state.momentumY = 0;
+						}
+
+						state.camTargetX = clamp(state.camTargetX, state.boundsMinX, state.boundsMaxX);
+						state.camTargetY = clamp(state.camTargetY, state.boundsMinY, state.boundsMaxY);
+
+						state.camX = lerp(state.camX, state.camTargetX, t);
+						state.camY = lerp(state.camY, state.camTargetY, t);
+						camera.position.x = state.camX;
+						camera.position.y = state.camY;
+						camera.position.z = lerp(camera.position.z, state.camZ || 5, t);
+					} else if (camAnim.active) {
+						var elapsed = performance.now() - camAnim.startTime;
+						var progress = Math.min(elapsed / camAnim.duration, 1);
+						camAnim.progress = easeInOutCubic(progress);
+						camera.position.x = camAnim.fromX + (camAnim.toX - camAnim.fromX) * camAnim.progress;
+						camera.position.y = camAnim.fromY + (camAnim.toY - camAnim.fromY) * camAnim.progress;
+						camera.position.z = camAnim.fromZ + (camAnim.toZ - camAnim.fromZ) * camAnim.progress;
+						if (progress >= 1) camAnim.active = false;
+					}
+
+					// ── Meshes (skip settled) ──
+					for (var i = 0; i < meshes.length; i++) {
+						var mesh = meshes[i];
+						var ud = mesh.userData;
+
+						var isHovered = (state.hovered === i && state.mode === 'browse' && !state.dragging);
+						ud.targetZ = isHovered ? ud.baseZ + 0.2 : ud.baseZ;
+						ud.targetScale = isHovered ? 1.03 : 1;
+						ud.targetBrightness = isHovered ? 1.1 : 1;
+
+						// Check if this mesh needs updating
+						var needsUpdate = (
+							Math.abs(ud.currentZ - ud.targetZ) > EPS ||
+							Math.abs(ud.currentScale - ud.targetScale) > EPS ||
+							Math.abs(ud.currentBrightness - ud.targetBrightness) > EPS ||
+							Math.abs(ud.currentOpacity - ud.targetOpacity) > EPS
+						);
+
+						if (needsUpdate) {
+							ud.currentZ = lerp(ud.currentZ, ud.targetZ, t);
+							ud.currentScale = lerp(ud.currentScale, ud.targetScale, t);
+							ud.currentBrightness = lerp(ud.currentBrightness, ud.targetBrightness, t);
+
+							// Opacity: sync with camera animation if active, otherwise lerp
+							if (camAnim.active && camAnim.opacityFrom[i] !== undefined) {
+								ud.currentOpacity = camAnim.opacityFrom[i] + (ud.targetOpacity - camAnim.opacityFrom[i]) * camAnim.progress;
+							} else {
+								ud.currentOpacity = lerp(ud.currentOpacity, ud.targetOpacity, t);
+							}
+
+							// Snap to target when close enough
+							if (Math.abs(ud.currentZ - ud.targetZ) < EPS) ud.currentZ = ud.targetZ;
+							if (Math.abs(ud.currentScale - ud.targetScale) < EPS) ud.currentScale = ud.targetScale;
+							if (Math.abs(ud.currentBrightness - ud.targetBrightness) < EPS) ud.currentBrightness = ud.targetBrightness;
+							if (Math.abs(ud.currentOpacity - ud.targetOpacity) < EPS) ud.currentOpacity = ud.targetOpacity;
+
+							mesh.position.z = ud.currentZ;
+							mesh.scale.setScalar(ud.currentScale);
+							mesh.material.uniforms.uBrightness.value = ud.currentBrightness;
+							mesh.material.uniforms.uOpacity.value = ud.currentOpacity;
+						}
+
+						// Texture mix (only when transitioning)
+						var mix = mesh.material.uniforms.uMix.value;
+						if (mix < 0.999 && ud.loaded) {
+							mesh.material.uniforms.uMix.value = lerp(mix, 1, t);
+							if (mesh.material.uniforms.uMix.value > 0.999) mesh.material.uniforms.uMix.value = 1;
+						}
+					}
+
+					// ── Texture loading (throttled — every 8 frames) ──
+					if (frameCount % 8 === 0) {
+						var vFov = camera.fov * Math.PI / 180;
+						var vH = 2 * Math.tan(vFov / 2) * camera.position.z;
+						var vW = vH * camera.aspect;
+						texManager.update(camera.position.x, camera.position.y, vW, vH);
+					}
+
+					renderer.render(scene, camera);
+				}
+
+				loadingOverlay.classList.add('hidden');
+				animate();
+			}
+		})();
+	</script>
+
+</body>
+
+</html>
