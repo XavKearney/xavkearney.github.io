@@ -375,12 +375,12 @@
 
 				var isMobile = window.innerWidth <= 768;
 				var camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
-				camera.position.set(0, 0, isMobile ? 3.5 : 5);
+				camera.position.set(0, 0, isMobile ? 2.5 : 5);
 
 				// ─── State ───
 				var state = {
 					mode: 'browse',
-					camX: 0, camY: 0, camZ: isMobile ? 3.5 : 5,
+					camX: 0, camY: 0, camZ: isMobile ? 2.5 : 5,
 					camTargetX: 0, camTargetY: 0,
 					// Mouse-edge panning velocity
 					panVelX: 0, panVelY: 0,
@@ -554,7 +554,7 @@
 					thumbs: new Map(),
 					fulls: new Map(),
 					maxConcurrent: isMobile ? 2 : 4,
-					thumbBudget: isMobile ? 25 : 50,
+					thumbBudget: 999, // keep all thumbs loaded — only 78 photos
 					queue: [],
 
 					loadThumb: function (index) {
@@ -754,7 +754,7 @@
 				canvas.addEventListener('wheel', function (e) {
 					if (state.mode !== 'browse') return;
 					e.preventDefault();
-					state.camZ = clamp(state.camZ + e.deltaY * 0.003, 2, 8);
+					state.camZ = clamp(state.camZ + e.deltaY * 0.003, 2.5, 6);
 				}, { passive: false });
 
 				canvas.addEventListener('click', function (e) {
@@ -817,7 +817,7 @@
 						e.preventDefault();
 						var dist = pinchDist(e);
 						var scale = state.pinchStartDist / dist; // pinch in = zoom out (larger z)
-						state.camZ = clamp(state.pinchStartZ * scale, 2, 8);
+						state.camZ = clamp(state.pinchStartZ * scale, 2.5, 6);
 						return;
 					}
 
@@ -826,7 +826,7 @@
 					var t = e.touches[0];
 					var dx = t.clientX - state.dragStartX;
 					var dy = t.clientY - state.dragStartY;
-					if (Math.abs(dx) > 3 || Math.abs(dy) > 3) state.dragMoved = true;
+					if (Math.abs(dx) > 10 || Math.abs(dy) > 10) state.dragMoved = true;
 
 					var scale = worldUnitsPerPixel();
 					state.camTargetX = state.dragCamStartX - dx * scale;
