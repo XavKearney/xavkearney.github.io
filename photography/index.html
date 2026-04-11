@@ -891,8 +891,10 @@
 
 				// ─── Detail View ───
 				var detailTimer = null;
+				var detailOpenedAt = 0;
 
 				function openDetail(index) {
+					detailOpenedAt = performance.now();
 					var isNav = detail.classList.contains('active'); // already in detail
 					state.detailIndex = index;
 
@@ -995,7 +997,10 @@
 				prevBtn.addEventListener('click', function (e) { e.stopPropagation(); navigateDetail(-1); });
 				nextBtn.addEventListener('click', function (e) { e.stopPropagation(); navigateDetail(1); });
 				// Click anywhere on overlay (not buttons) = close
-				detail.addEventListener('click', closeDetail);
+				// Guard against synthetic click from touch events
+				detail.addEventListener('click', function () {
+					if (performance.now() - detailOpenedAt > 400) closeDetail();
+				});
 
 				document.addEventListener('keydown', function (e) {
 					if (state.mode === 'detail' || state.mode === 'transitioning') {
