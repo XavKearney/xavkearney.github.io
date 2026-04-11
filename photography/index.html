@@ -822,11 +822,26 @@
 					}
 
 					if (!state.dragging) return;
-					e.preventDefault();
 					var t = e.touches[0];
 					var dx = t.clientX - state.dragStartX;
 					var dy = t.clientY - state.dragStartY;
-					if (Math.abs(dx) > 20 || Math.abs(dy) > 20) state.dragMoved = true;
+
+					// Don't start panning until drag threshold is exceeded
+					if (!state.dragMoved) {
+						if (Math.abs(dx) > 20 || Math.abs(dy) > 20) {
+							state.dragMoved = true;
+							// Reset drag origin so pan doesn't jump
+							state.dragStartX = t.clientX;
+							state.dragStartY = t.clientY;
+							state.dragCamStartX = state.camTargetX;
+							state.dragCamStartY = state.camTargetY;
+						}
+						return; // don't pan yet
+					}
+
+					e.preventDefault();
+					dx = t.clientX - state.dragStartX;
+					dy = t.clientY - state.dragStartY;
 
 					var scale = worldUnitsPerPixel();
 					state.camTargetX = state.dragCamStartX - dx * scale;
