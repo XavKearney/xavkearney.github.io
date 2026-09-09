@@ -19,7 +19,9 @@
 	<meta property="og:description" content="Photography by Xav Kearney">
 	<meta property="og:type" content="website">
 	<meta property="og:url" content="https://xav.ai/photography/">
-	<meta name="twitter:card" content="summary">
+	<meta property="og:image" content="https://xav.ai/photography/photos/full/pxl-20250720-191556402.webp">
+	<meta name="twitter:card" content="summary_large_image">
+	<meta name="twitter:image" content="https://xav.ai/photography/photos/full/pxl-20250720-191556402.webp">
 	<link rel="canonical" href="https://xav.ai/photography/">
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -49,6 +51,72 @@
 			cursor: default;
 		}
 
+		#gallery-canvas.dragging {
+			cursor: grabbing;
+		}
+
+		/* Soft scrims so overlaid text stays legible over photos */
+		.scrim {
+			position: fixed;
+			left: 0;
+			right: 0;
+			height: 6rem;
+			z-index: 55;
+			pointer-events: none;
+		}
+
+		.scrim-top {
+			top: 0;
+			background: linear-gradient(rgba(26, 26, 26, 0.75), rgba(26, 26, 26, 0));
+		}
+
+		.scrim-bottom {
+			bottom: 0;
+			background: linear-gradient(rgba(26, 26, 26, 0), rgba(26, 26, 26, 0.75));
+			opacity: 0;
+			transition: opacity 0.6s ease;
+		}
+
+		.scrim-bottom.visible { opacity: 1; }
+
+		/* Link home */
+		.site-link {
+			position: fixed;
+			top: 1rem;
+			left: 1.5rem;
+			z-index: 60;
+			font-size: clamp(0.9rem, 2.5vw, 1rem);
+			color: var(--text);
+			opacity: 0.8;
+			text-decoration: none;
+			letter-spacing: 0.02em;
+			transition: opacity 0.2s ease;
+		}
+
+		.site-link:hover {
+			opacity: 1;
+			transform: none;
+			text-shadow: none;
+		}
+
+		/* One-off interaction hint */
+		.hint {
+			position: fixed;
+			bottom: 1.5rem;
+			left: 0;
+			right: 0;
+			z-index: 60;
+			text-align: center;
+			font-size: clamp(0.85rem, 2.5vw, 0.95rem);
+			color: var(--text);
+			letter-spacing: 0.02em;
+			pointer-events: none;
+			opacity: 0;
+			transition: opacity 0.6s ease;
+		}
+
+		.hint.visible { opacity: 1; }
+
 		/* Detail overlay */
 		.photo-detail {
 			position: fixed;
@@ -70,7 +138,7 @@
 		.photo-detail .close-btn {
 			position: fixed;
 			top: 1rem;
-			right: 4.5rem;
+			right: 1.5rem;
 			z-index: 51;
 			background: none;
 			border: none;
@@ -254,6 +322,11 @@
 		gtag('config', 'G-CF2279ZMGC');
 	</script>
 
+	<div class="scrim scrim-top"></div>
+	<div class="scrim scrim-bottom" id="hintScrim"></div>
+	<a class="site-link" href="/">&larr; Xav Kearney</a>
+	<p class="hint" id="hint" aria-hidden="true"></p>
+
 	<main>
 		<canvas id="gallery-canvas"></canvas>
 
@@ -291,6 +364,36 @@
 			}
 
 			var photos = typeof PHOTO_MANIFEST !== 'undefined' ? PHOTO_MANIFEST : [];
+
+			var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
+				'July', 'August', 'September', 'October', 'November', 'December'];
+
+			// "Belize · July 2025"
+			function captionFor(photo) {
+				var parts = [];
+				if (photo.location) parts.push(photo.location);
+				if (photo.date) {
+					var m = /^(\d{4})-(\d{2})/.exec(photo.date);
+					if (m) parts.push(MONTHS[parseInt(m[2], 10) - 1] + ' ' + m[1]);
+				}
+				return parts.join(' \u00b7 ');
+			}
+
+			// Show the hint once, then fade it on first interaction
+			var hint = document.getElementById('hint');
+			var hintScrim = document.getElementById('hintScrim');
+			var hintTimer = null;
+			function showHint(text) {
+				hint.textContent = text;
+				hint.classList.add('visible');
+				hintScrim.classList.add('visible');
+				hintTimer = setTimeout(hideHint, 6000);
+			}
+			function hideHint() {
+				clearTimeout(hintTimer);
+				hint.classList.remove('visible');
+				hintScrim.classList.remove('visible');
+			}
 			var loadingOverlay = document.getElementById('loadingOverlay');
 			var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -338,7 +441,7 @@
 					card.addEventListener('click', function () {
 						lbImage.src = photo.full;
 						lbImage.alt = photo.location || 'Photograph';
-						lbLocation.textContent = photo.location || '';
+						lbLocation.textContent = captionFor(photo);
 						lightbox.classList.add('active');
 					});
 					container.appendChild(card);
@@ -707,7 +810,69 @@
 					return h / window.innerHeight;
 				}
 
-				// ─── Input: Desktop — mouse position drives panning ───
+				// ─── Drag to pan (shared by mouse and touch) ───
+				function beginDrag(x, y) {
+					state.dragging = true;
+					state.dragMoved = false;
+					state.dragStartX = x;
+					state.dragStartY = y;
+					state.dragCamStartX = state.camTargetX;
+					state.dragCamStartY = state.camTargetY;
+					state.momentumX = 0;
+					state.momentumY = 0;
+					state.lastDragX = x;
+					state.lastDragY = y;
+					state.lastDragTime = performance.now();
+				}
+
+				// Returns true once the drag is actually panning the camera
+				function moveDrag(x, y, threshold) {
+					var dx = x - state.dragStartX;
+					var dy = y - state.dragStartY;
+
+					// Don't start panning until drag threshold is exceeded
+					if (!state.dragMoved) {
+						if (Math.abs(dx) > threshold || Math.abs(dy) > threshold) {
+							state.dragMoved = true;
+							canvas.classList.add('dragging');
+							hideHint();
+							// Reset origins so pan and momentum don't jump
+							state.dragStartX = x;
+							state.dragStartY = y;
+							state.dragCamStartX = state.camTargetX;
+							state.dragCamStartY = state.camTargetY;
+							state.lastDragX = x;
+							state.lastDragY = y;
+							state.lastDragTime = performance.now();
+						}
+						return false;
+					}
+
+					dx = x - state.dragStartX;
+					dy = y - state.dragStartY;
+
+					var scale = worldUnitsPerPixel();
+					state.camTargetX = clamp(state.dragCamStartX - dx * scale, state.boundsMinX, state.boundsMaxX);
+					state.camTargetY = clamp(state.dragCamStartY + dy * scale, state.boundsMinY, state.boundsMaxY);
+
+					var now = performance.now();
+					var dt = now - state.lastDragTime;
+					if (dt > 0) {
+						state.momentumX = -(x - state.lastDragX) * scale / (dt / 1000);
+						state.momentumY = (y - state.lastDragY) * scale / (dt / 1000);
+					}
+					state.lastDragX = x;
+					state.lastDragY = y;
+					state.lastDragTime = now;
+					return true;
+				}
+
+				function endDrag() {
+					state.dragging = false;
+					canvas.classList.remove('dragging');
+				}
+
+				// ─── Input: Desktop — drag or push the mouse to the edge to pan ───
 				var PAN_DEAD_ZONE = 0.35; // ±35% from centre = 70% safe zone
 				var PAN_SPEED = 4.0; // world units per second at edge
 
@@ -722,8 +887,28 @@
 					canvas.style.cursor = 'default';
 				});
 
+				canvas.addEventListener('mousedown', function (e) {
+					if (state.mode !== 'browse' || e.button !== 0) return;
+					e.preventDefault();
+					beginDrag(e.clientX, e.clientY);
+				});
+
+				window.addEventListener('mousemove', function (e) {
+					if (!state.dragging || state.mode !== 'browse') return;
+					moveDrag(e.clientX, e.clientY, 4);
+				});
+
+				window.addEventListener('mouseup', function () {
+					if (state.dragging) endDrag();
+				});
+
 				canvas.addEventListener('mousemove', function (e) {
 					if (state.mode !== 'browse') return;
+					if (state.dragging) {
+						state.panVelX = 0;
+						state.panVelY = 0;
+						return;
+					}
 
 					// Normalise mouse position to [-1, 1]
 					var mx = (e.clientX / window.innerWidth) * 2 - 1;
@@ -754,11 +939,12 @@
 				canvas.addEventListener('wheel', function (e) {
 					if (state.mode !== 'browse') return;
 					e.preventDefault();
+					hideHint();
 					state.camZ = clamp(state.camZ + e.deltaY * 0.003, 1, 3);
 				}, { passive: false });
 
 				canvas.addEventListener('click', function (e) {
-					if (state.mode !== 'browse') return;
+					if (state.mode !== 'browse' || state.dragMoved) return;
 					handleClick(e.clientX, e.clientY);
 				});
 
@@ -787,17 +973,7 @@
 					}
 
 					var t = e.touches[0];
-					state.dragging = true;
-					state.dragMoved = false;
-					state.dragStartX = t.clientX;
-					state.dragStartY = t.clientY;
-					state.dragCamStartX = state.camTargetX;
-					state.dragCamStartY = state.camTargetY;
-					state.momentumX = 0;
-					state.momentumY = 0;
-					state.lastDragX = t.clientX;
-					state.lastDragY = t.clientY;
-					state.lastDragTime = performance.now();
+					beginDrag(t.clientX, t.clientY);
 				}, { passive: true });
 
 				canvas.addEventListener('touchmove', function (e) {
@@ -819,44 +995,8 @@
 
 					if (!state.dragging) return;
 					var t = e.touches[0];
-					var dx = t.clientX - state.dragStartX;
-					var dy = t.clientY - state.dragStartY;
-
-					// Don't start panning until drag threshold is exceeded
-					if (!state.dragMoved) {
-						if (Math.abs(dx) > 20 || Math.abs(dy) > 20) {
-							state.dragMoved = true;
-							// Reset origins so pan and momentum don't jump
-							state.dragStartX = t.clientX;
-							state.dragStartY = t.clientY;
-							state.dragCamStartX = state.camTargetX;
-							state.dragCamStartY = state.camTargetY;
-							state.lastDragX = t.clientX;
-							state.lastDragY = t.clientY;
-							state.lastDragTime = performance.now();
-						}
-						return; // don't pan yet
-					}
-
-					e.preventDefault();
-					dx = t.clientX - state.dragStartX;
-					dy = t.clientY - state.dragStartY;
-
-					var scale = worldUnitsPerPixel();
-					state.camTargetX = state.dragCamStartX - dx * scale;
-					state.camTargetY = state.dragCamStartY + dy * scale;
-					state.camTargetX = clamp(state.camTargetX, state.boundsMinX, state.boundsMaxX);
-					state.camTargetY = clamp(state.camTargetY, state.boundsMinY, state.boundsMaxY);
-
-					var now = performance.now();
-					var dt = now - state.lastDragTime;
-					if (dt > 0) {
-						state.momentumX = -(t.clientX - state.lastDragX) * scale / (dt / 1000);
-						state.momentumY = (t.clientY - state.lastDragY) * scale / (dt / 1000);
-					}
-					state.lastDragX = t.clientX;
-					state.lastDragY = t.clientY;
-					state.lastDragTime = now;
+					// Only block scrolling once we're actually panning (20px threshold)
+					if (moveDrag(t.clientX, t.clientY, 20)) e.preventDefault();
 				}, { passive: false });
 
 				canvas.addEventListener('touchend', function (e) {
@@ -870,7 +1010,7 @@
 						return;
 					}
 					if (!state.dragging) return;
-					state.dragging = false;
+					endDrag();
 
 					if (!state.dragMoved && e.changedTouches.length > 0) {
 						var t = e.changedTouches[0];
@@ -894,6 +1034,7 @@
 				var detailOpenedAt = 0;
 
 				function openDetail(index) {
+					hideHint();
 					detailOpenedAt = performance.now();
 					var isNav = detail.classList.contains('active'); // already in detail
 					state.detailIndex = index;
@@ -917,7 +1058,7 @@
 						meshes[i].userData.targetOpacity = (i === index) ? 1 : 0.15;
 					}
 
-					detailLocation.textContent = photo.location || '';
+					detailLocation.textContent = captionFor(photo);
 					detail.classList.add('active');
 
 					texManager.loadFull(index);
@@ -1015,6 +1156,7 @@
 				window.addEventListener('resize', function () {
 					clearTimeout(resizeTimer);
 					resizeTimer = setTimeout(function () {
+						if (!window.innerWidth || !window.innerHeight) return;
 						isMobile = window.innerWidth <= 768;
 						camera.aspect = window.innerWidth / window.innerHeight;
 						camera.updateProjectionMatrix();
@@ -1176,6 +1318,9 @@
 
 				loadingOverlay.classList.add('hidden');
 				animate();
+
+				var coarse = window.matchMedia('(hover: none)').matches;
+				showHint(coarse ? 'Drag to explore, tap a photo to open it' : 'Drag to explore, click a photo to open it');
 			}
 		})();
 	</script>
